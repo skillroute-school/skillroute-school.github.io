@@ -439,6 +439,7 @@ const Sound=(()=>{
 const sBtn=$('#soundBtn');
 function syncSound(){sBtn.setAttribute('aria-pressed',Sound.on?'true':'false');$('#soundTxt').textContent=Sound.on?'Музыка':'Тихо';}
 sBtn.onclick=()=>{Sound.toggle();syncSound();};syncSound();
+(()=>{const kick=e=>{if(e&&e.target&&e.target.closest&&e.target.closest('#soundBtn'))return;if(Sound.on)Sound.start();['pointerdown','touchend','keydown','click'].forEach(t=>document.removeEventListener(t,kick,true));};['pointerdown','touchend','keydown','click'].forEach(t=>document.addEventListener(t,kick,true));})();
 
 /* =============== FACES =============== */
 let UID=0;
