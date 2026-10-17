@@ -1,0 +1,1445 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+<title>Мэр на данных — квест Skill Route</title>
+<meta name="description" content="Квест для будущих продактов: три города, три кризиса и 24 месяца, чтобы принимать решения на основе данных.">
+<meta property="og:title" content="Мэр на данных — квест Skill Route">
+<meta property="og:description" content="Три города, три кризиса, 24 месяца. Решайте как продакт-менеджер — или проиграете выборы.">
+<meta name="theme-color" content="#0b0f17">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0f17'/%3E%3Cpath d='M10 50V30h8v20M22 50V18h10v32M36 50V26h8v24M48 50V34h6v16' fill='%23ffb547'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800;900&display=swap">
+<style>
+:root{
+  --bg:#0b0f17;--glass:rgba(13,18,29,.88);--glass2:rgba(255,255,255,.045);--glass3:rgba(255,255,255,.08);
+  --line:rgba(255,255,255,.1);--line2:rgba(255,255,255,.18);
+  --fg:#eef2f7;--muted:#9eabbd;--dim:#6f7c90;
+  --amber:#ffb547;--amber-s:rgba(255,181,71,.14);--green:#5ad19a;--green-s:rgba(90,209,154,.14);
+  --red:#ff6b6b;--red-s:rgba(255,107,107,.14);--blue:#6aa8ff;--blue-s:rgba(106,168,255,.14);--violet:#a68bff;
+  --f:'Golos Text',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --panelW:clamp(400px,40vw,590px);--cityH:100vh;
+  color-scheme:dark;
+}
+@supports(height:100dvh){:root{--cityH:100dvh}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--fg);font-family:var(--f);-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+body{font-size:16px;line-height:1.55;font-weight:450}
+[hidden]{display:none!important}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+svg{max-width:100%}
+
+#city{position:fixed;left:0;top:0;width:100vw;height:var(--cityH);display:block;z-index:0}
+
+/* HUD */
+.hud{position:fixed;z-index:5;top:calc(14px + env(safe-area-inset-top,0px));left:max(18px,env(safe-area-inset-left,0px));right:calc(var(--panelW) + 34px);display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;letter-spacing:-.01em;margin-right:6px;text-shadow:0 1px 8px rgba(0,0,0,.5)}
+.brand .logo{width:28px;height:28px;border-radius:8px;background:var(--amber);display:grid;place-items:center}
+.brand .logo svg{width:18px;height:18px}
+.chip{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 12px;border-radius:999px;background:rgba(10,14,22,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);font-weight:700;font-size:13.5px;white-space:nowrap;position:relative}
+.chip svg{width:16px;height:16px;flex:0 0 16px}
+.chip small{font-weight:600;color:var(--muted);font-size:11.5px}
+.chip b{font-variant-numeric:tabular-nums}
+.chip.up{border-color:rgba(90,209,154,.6)}.chip.down{border-color:rgba(255,107,107,.6)}
+.chip.warn{background:rgba(255,107,107,.18);border-color:rgba(255,107,107,.5)}
+.sound{cursor:pointer}
+.sound[aria-pressed="false"]{color:var(--dim)}
+.fl{position:absolute;right:6px;top:-18px;font-weight:800;font-size:12.5px;pointer-events:none;animation:fl 1.5s ease-out forwards;padding:1px 6px;border-radius:6px;background:rgba(10,14,22,.85)}
+.fl.p{color:var(--green)}.fl.n{color:var(--red)}
+@keyframes fl{0%{opacity:0;transform:translateY(6px)}15%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-14px)}}
+.sr{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 11px 0 4px;border-radius:999px;background:rgba(10,14,22,.62);border:1px solid var(--line);color:var(--fg);text-decoration:none;font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.sr i{width:22px;height:22px;border-radius:50%;background:var(--green);color:#06221a;display:grid;place-items:center;font-style:normal;font-weight:900;font-size:9px}
+
+.cityInfo{position:fixed;z-index:4;left:max(22px,env(safe-area-inset-left,0px));bottom:calc(22px + env(safe-area-inset-bottom,0px));pointer-events:none;text-shadow:0 2px 14px rgba(0,0,0,.6)}
+.cityInfo .nm{font-weight:900;font-size:clamp(30px,3.6vw,52px);letter-spacing:-.025em;line-height:1}
+.cityInfo .sub{font-weight:600;color:rgba(238,242,247,.82);font-size:14px;margin-top:6px}
+.dots{display:flex;gap:5px;margin-top:10px}
+.dots span{width:18px;height:4px;border-radius:2px;background:rgba(255,255,255,.22);transition:background .4s}
+.dots span.done{background:var(--green)}.dots span.now{background:var(--amber)}
+
+/* PANEL */
+.panel{position:fixed;z-index:6;top:calc(14px + env(safe-area-inset-top,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));right:max(14px,env(safe-area-inset-right,0px));width:var(--panelW);background:var(--glass);backdrop-filter:blur(18px) saturate(1.25);-webkit-backdrop-filter:blur(18px) saturate(1.25);border:1px solid var(--line);border-radius:22px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,.5)}
+.phead{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line);min-height:58px}
+.phead .ttl{flex:1;min-width:0}
+.phead .ttl b{display:block;font-size:14.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.phead .ttl small{display:block;color:var(--muted);font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lvl{display:flex;flex-direction:column;gap:4px;min-width:118px}
+.lvl b{font-size:12px;font-weight:800;line-height:1.1;white-space:nowrap}
+.lvlbar{height:5px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden}
+.lvlbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--amber));transition:width .7s}
+.streak{display:flex;align-items:center;gap:4px;font-weight:800;font-size:13px;padding:5px 9px;border-radius:999px;background:var(--glass2);border:1px solid var(--line)}
+.streak[data-n="0"]{opacity:.45}
+.streak svg{width:15px;height:15px}
+#stage{flex:1;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:20px 20px 40px;display:flex;flex-direction:column;gap:14px;position:relative}
+#stage::-webkit-scrollbar{width:8px}#stage::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px}
+#stage>*{flex-shrink:0;animation:rise .38s cubic-bezier(.2,.8,.2,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+@media (max-width:899px){
+  :root{--cityH:36vh}
+  @supports(height:100dvh){:root{--cityH:36dvh}}
+  .hud{left:10px;right:10px;top:calc(8px + env(safe-area-inset-top,0px));gap:5px}
+  .brand{display:none}
+  .chip{height:30px;padding:0 9px;font-size:12.5px;gap:5px}
+  .chip small{display:none}
+  .chip svg{width:14px;height:14px;flex-basis:14px}
+  .sr{display:none}
+  .panel{top:calc(var(--cityH) - 16px);left:0;right:0;bottom:0;width:auto;border-radius:20px 20px 0 0;border-bottom:0;border-left:0;border-right:0}
+  .phead{padding:10px 14px;min-height:52px}
+  .lvl{min-width:92px}
+  #stage{padding:16px 14px calc(30px + env(safe-area-inset-bottom,0px))}
+  .cityInfo{bottom:auto;top:calc(var(--cityH) - 66px);left:12px}
+  .cityInfo .nm{font-size:22px}.cityInfo .sub{font-size:12px;margin-top:2px}.dots{display:none}
+}
+
+/* CONTENT */
+h1,h2,h3,h4{margin:0;line-height:1.15;text-wrap:balance;letter-spacing:-.015em}
+h1{font-size:clamp(32px,4vw,46px);font-weight:900}
+h2{font-size:clamp(22px,2.2vw,28px);font-weight:800}
+h3{font-size:17px;font-weight:800}
+p{margin:0}
+.chHead{display:flex;flex-direction:column;gap:8px;padding-bottom:2px}
+.meta{display:flex;gap:6px;flex-wrap:wrap}
+.tag{display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:6px;background:var(--amber-s);color:var(--amber);font-weight:800;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase}
+.tag.g{background:var(--glass3);color:var(--muted)}
+.tag.r{background:var(--red-s);color:var(--red)}
+
+.line{display:flex;gap:11px;align-items:flex-start}
+.ava{flex:0 0 50px;width:50px;height:50px;border-radius:50%;overflow:hidden;background:#222;box-shadow:0 0 0 2px rgba(255,255,255,.08)}
+.ava svg{display:block;width:100%;height:100%}
+.bubble{flex:1;min-width:0;background:var(--glass2);border:1px solid var(--line);border-radius:4px 16px 16px 16px;padding:10px 14px 12px}
+.who{font-size:13px;font-weight:800;color:var(--amber);display:flex;flex-wrap:wrap;gap:2px 8px;align-items:baseline;margin-bottom:2px}
+.who em{font-style:normal;color:var(--dim);font-weight:600;font-size:12px}
+.txt{font-size:16px;line-height:1.55;font-weight:450}
+.txt.typing::after{content:"";display:inline-block;width:7px;height:15px;margin-left:2px;vertical-align:-2px;background:var(--amber);animation:blink .7s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.narr{border-left:3px solid var(--amber);background:linear-gradient(90deg,var(--amber-s),transparent 80%);padding:10px 14px;border-radius:0 12px 12px 0}
+.narr .txt{font-weight:600;color:#f6e7cf}
+.hintBox{border:1px dashed rgba(106,168,255,.5);background:var(--blue-s);border-radius:12px;padding:10px 14px;font-size:15px}
+.hintBox b{color:var(--blue)}
+
+.choices{display:flex;flex-direction:column;gap:9px}
+.choice{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;background:var(--glass2);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-weight:550;font-size:15.5px;line-height:1.45;transition:border-color .15s,background .15s,transform .15s}
+.choice:hover:not(:disabled){border-color:var(--amber);background:var(--amber-s)}
+.choice:active:not(:disabled){transform:scale(.99)}
+.choice:disabled{cursor:default;opacity:.42}
+.key{flex:0 0 26px;height:26px;border-radius:8px;display:grid;place-items:center;font-weight:800;font-size:13px;background:var(--glass3);color:var(--amber);margin-top:-1px}
+.choice.picked{opacity:1}
+.choice.ok{border-color:var(--green);background:var(--green-s)}.choice.ok .key{background:var(--green);color:#06221a}
+.choice.bad{border-color:var(--red);background:var(--red-s)}.choice.bad .key{background:var(--red);color:#2a0606}
+.choice.mid{border-color:var(--amber);background:var(--amber-s)}.choice.mid .key{background:var(--amber);color:#2a1a02}
+.choice.right{opacity:.9;border-style:dashed;border-color:var(--green)}
+
+.btn{align-self:flex-start;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 20px;border-radius:12px;border:0;background:var(--amber);color:#1c1204;font-weight:800;font-size:15px;text-decoration:none;transition:transform .12s,filter .15s,opacity .15s}
+.btn:hover:not(:disabled){filter:brightness(1.08)}
+.btn:active:not(:disabled){transform:scale(.97)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.ghost{background:var(--glass3);color:var(--fg);border:1px solid var(--line)}
+.btn.red{background:var(--red);color:#2a0606}
+.btn.green{background:var(--green);color:#06221a}
+.btn.big{min-height:52px;font-size:17px;padding:0 26px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+.fb{border:1px solid var(--line);border-radius:16px;padding:16px;background:var(--glass2);display:flex;flex-direction:column;gap:10px}
+.fb.ok{border-color:rgba(90,209,154,.45)}.fb.bad{border-color:rgba(255,107,107,.45)}.fb.mid{border-color:rgba(255,181,71,.45)}
+.fbTop{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.verdict{font-weight:900;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;padding:4px 10px;border-radius:6px}
+.fb.ok .verdict{background:var(--green);color:#06221a}.fb.bad .verdict{background:var(--red);color:#2a0606}.fb.mid .verdict{background:var(--amber);color:#2a1a02}
+.xp{font-weight:800;font-size:13px;color:var(--green)}
+.fb p{color:#d5dce6;font-size:15.5px}
+.lesson{border-left:3px solid var(--amber);background:var(--amber-s);border-radius:0 10px 10px 0;padding:10px 12px}
+.lesson span{display:block;font-weight:900;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);margin-bottom:2px}
+.lesson p{color:var(--fg);font-weight:550;font-size:15px}
+
+.card{border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--glass2);display:flex;flex-direction:column;gap:12px;min-width:0}
+.ph{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.ph small,.cap{font-size:13px;font-weight:550;color:var(--muted)}
+.scroller{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar{display:grid;grid-template-columns:minmax(90px,150px) 1fr 44px;gap:10px;align-items:center;font-weight:600;font-size:14.5px}
+.track{height:12px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden}
+.fill{height:100%;width:0;border-radius:6px;background:#7f8ea3;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.bar.hot .fill{background:var(--amber)}
+.v{font-weight:800;text-align:right;font-variant-numeric:tabular-nums}
+
+.funnel{display:flex;flex-direction:column;gap:2px}
+.fstep{display:flex;flex-direction:column;gap:5px;background:none;border:1px solid transparent;padding:8px 10px;border-radius:12px;text-align:left;width:100%}
+.fstep:hover:not(:disabled){background:var(--amber-s);border-color:rgba(255,181,71,.35)}
+.fstep:disabled{cursor:default}
+.flabel{display:flex;justify-content:space-between;gap:8px;font-weight:600;font-size:14.5px}
+.flabel em{font-style:normal;font-weight:800;font-variant-numeric:tabular-nums}
+.ftrack{height:14px;border-radius:7px;background:rgba(255,255,255,.06);overflow:hidden}
+.fbar{display:block;height:100%;width:0;border-radius:7px;background:var(--blue);transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.drop{font-size:13px;font-weight:700;color:var(--dim);padding-left:12px;height:0;overflow:hidden;transition:height .3s}
+.funnel.revealed .drop{height:19px}.drop.big{color:var(--red)}
+.fstep.ok{background:var(--green-s);border-color:rgba(90,209,154,.5)}.fstep.ok .fbar{background:var(--green)}
+.fstep.bad{background:var(--red-s);border-color:rgba(255,107,107,.5)}.fstep.bad .fbar{background:var(--red)}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.ch{border:1px solid var(--line);background:var(--glass2);border-radius:999px;padding:8px 14px;font-weight:600;font-size:14.5px;text-align:left;transition:background .15s,border-color .15s}
+.ch:hover:not(:disabled){border-color:var(--line2)}
+.ch[aria-pressed="true"]{background:var(--amber-s);border-color:var(--amber);color:#ffe0ad}
+.ch.yes{background:var(--red-s);border-color:rgba(255,107,107,.5)}.ch.no{background:var(--green-s);border-color:rgba(90,209,154,.5)}
+.ch.miss{outline:2px dashed var(--amber);outline-offset:2px}
+.ch:disabled{cursor:default}
+
+.residents{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.res{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:12px 6px;border:1px solid var(--line);border-radius:14px;background:var(--glass2)}
+.res .ava{width:58px;height:58px;flex:none}
+.res b{font-size:13.5px}.res small{font-size:11.5px;color:var(--muted);line-height:1.3}
+.qlist{display:flex;flex-direction:column;gap:7px}
+.q{display:flex;gap:10px;align-items:flex-start;text-align:left;background:var(--glass2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-weight:550;font-size:15px}
+.q[aria-pressed="true"]{border-color:var(--amber);background:var(--amber-s)}
+.q .box{flex:0 0 20px;height:20px;border-radius:6px;border:1.5px solid var(--line2);display:grid;place-items:center;font-size:12px;font-weight:900;margin-top:1px}
+.q[aria-pressed="true"] .box{background:var(--amber);border-color:var(--amber);color:#2a1a02}
+.q:disabled{cursor:default}.q.g{border-color:rgba(90,209,154,.5)}.q.b{border-color:rgba(255,107,107,.5)}
+.qa{border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--glass2);display:flex;flex-direction:column;gap:9px}
+.qa h4{font-size:14.5px;font-weight:700;color:#dfe5ee}
+.ans{display:flex;gap:9px;align-items:flex-start;font-size:15px}
+.ans .mini{flex:0 0 30px;width:30px;height:30px;border-radius:50%;overflow:hidden}
+.ans .mini svg{width:100%;height:100%;display:block}
+.qv{align-self:flex-start;font-weight:800;font-size:11.5px;padding:2px 8px;border-radius:5px;letter-spacing:.03em}
+.qv.g{background:var(--green-s);color:var(--green)}.qv.b{background:var(--red-s);color:var(--red)}.qv.m{background:var(--amber-s);color:var(--amber)}
+
+.slots{display:flex;flex-direction:column;gap:12px}
+.slot{display:flex;flex-direction:column;gap:7px}
+.slot>b{font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.slot .ch{font-size:14px;padding:7px 12px}
+.preview{font-size:16.5px;font-weight:600;line-height:1.6;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.preview span{color:var(--amber);border-bottom:1.5px solid var(--amber)}
+.preview span.empty{color:var(--dim);border-bottom-style:dashed;border-color:var(--dim)}
+
+.abc{width:100%;height:220px;display:block}
+.abmeta{display:flex;flex-wrap:wrap;gap:6px 16px;font-weight:600;font-size:14px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.abmeta b{color:var(--fg)}
+.lg{display:inline-block;width:14px;height:4px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.peek{display:flex;flex-direction:column;gap:10px;background:var(--red-s);border:1px solid rgba(255,107,107,.4);border-radius:14px;padding:12px 14px}
+.peek b{font-weight:800}
+
+table.dt{width:100%;border-collapse:collapse;font-size:14.5px;font-variant-numeric:tabular-nums;min-width:340px}
+.dt th,.dt td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line)}
+.dt th:first-child,.dt td:first-child{text-align:left}
+.dt th{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.03em}
+.dt td b{font-weight:800}
+.dt tr.tot td{font-weight:800;border-top:1px solid var(--line2)}
+.up{color:var(--green)}.dn{color:var(--red)}
+.heat td.c{text-align:center;font-weight:700;border-radius:6px}
+
+.toggle{display:inline-flex;align-self:flex-start;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:rgba(0,0,0,.2)}
+.toggle button{border:0;background:none;padding:7px 14px;font-weight:700;font-size:13.5px;color:var(--muted)}
+.toggle button[aria-pressed="true"]{background:var(--amber);color:#2a1a02}
+
+.paper{background:#f3eee2;color:#211c14;border-radius:6px;padding:16px 18px 18px;display:flex;flex-direction:column;gap:10px;box-shadow:0 18px 40px rgba(0,0,0,.45);transform:rotate(-.6deg);animation:paperIn .6s cubic-bezier(.2,.9,.3,1.1) both!important}
+@keyframes paperIn{from{opacity:0;transform:rotate(-8deg) scale(.85) translateY(20px)}to{opacity:1;transform:rotate(-.6deg)}}
+.mast{display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-bottom:3px double #211c14;padding-bottom:6px;flex-wrap:wrap}
+.mast b{font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:20px;letter-spacing:.02em}
+.mast small{font-size:12px;font-weight:600;color:#6b6152}
+.headline{font-family:Georgia,'Times New Roman',serif;font-weight:700;font-size:clamp(20px,2.4vw,26px);line-height:1.15;text-wrap:balance}
+.paper p{font-size:14.5px;color:#3b3428;line-height:1.5}
+
+.phone{align-self:center;width:min(320px,100%);background:#05070b;border-radius:30px;padding:10px;border:1px solid var(--line2);box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.screen{background:#121823;border-radius:22px;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:230px}
+.post{background:#1b2331;border-radius:12px;padding:9px 11px;font-size:14px;animation:rise .35s both}
+.post b{font-size:13px}.post small{color:var(--dim)}
+.post .lk{font-size:12px;color:var(--red);font-weight:700;margin-top:3px}
+.timer{display:flex;align-items:center;gap:10px;font-weight:900;font-size:18px;font-variant-numeric:tabular-nums}
+.tbar{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden}
+.tbar i{display:block;height:100%;width:100%;background:var(--red);transition:width 1s linear}
+
+.mapWrap{display:grid;grid-template-columns:1.25fr 1fr;gap:12px;align-items:start}
+@media (max-width:560px){.mapWrap{grid-template-columns:1fr}}
+.map svg{width:100%;height:auto;display:block;border-radius:12px}
+.map .d{cursor:pointer}
+.dlist{display:flex;flex-direction:column;gap:6px}
+.dbtn{display:flex;justify-content:space-between;align-items:center;gap:8px;background:var(--glass2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-weight:600;font-size:14.5px;text-align:left}
+.dbtn em{font-style:normal;font-weight:800}
+.dbtn.low{border-color:rgba(255,107,107,.6);background:var(--red-s)}.dbtn.hi{border-color:rgba(90,209,154,.5);background:var(--green-s)}.dbtn.md{border-color:rgba(255,181,71,.5);background:var(--amber-s)}
+
+.budget{display:flex;flex-direction:column;gap:6px}
+.btrack{height:10px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden}
+.bfill{height:100%;width:0;background:var(--green);transition:width .35s,background .3s}.bfill.over{background:var(--red)}
+.blabel{display:flex;justify-content:space-between;gap:10px;font-weight:600;font-size:14px;font-variant-numeric:tabular-nums}
+.projects{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:9px}
+.proj{text-align:left;background:var(--glass2);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;transition:border-color .15s,background .15s}
+.proj:hover:not(:disabled){border-color:var(--line2)}
+.proj[aria-pressed="true"]{border-color:var(--amber);background:var(--amber-s)}
+.proj:disabled{cursor:default}
+.proj h4{font-size:14.5px;font-weight:800;line-height:1.25}
+.proj[aria-pressed="true"] h4::before{content:"✓ ";color:var(--amber)}
+.proj .d{font-size:13px;color:var(--muted);line-height:1.35}
+.rice{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.rice div{background:rgba(0,0,0,.25);border-radius:7px;padding:4px 2px;text-align:center}
+.rice small{display:block;font-size:9.5px;font-weight:700;color:var(--dim);letter-spacing:.04em}
+.rice b{font-size:13px;font-variant-numeric:tabular-nums}
+.pfoot{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:14px}
+.score{color:var(--dim);font-size:13px}.score.on{color:#2a1a02;background:var(--amber);padding:1px 8px;border-radius:6px}
+.formula{font-weight:800;font-size:14.5px;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+
+.race{display:flex;flex-direction:column;gap:12px}
+.cand{display:grid;grid-template-columns:46px 1fr 54px;gap:10px;align-items:center}
+.cand .ava{width:46px;height:46px;flex:none}
+.cand small{display:block;font-weight:700;font-size:13px;margin-bottom:4px}
+.cand .tr{height:14px;border-radius:7px;background:rgba(255,255,255,.08);overflow:hidden}
+.cand .tr i{display:block;height:100%;width:0;border-radius:7px;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.cand b{font-weight:900;font-size:19px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* MENU */
+.intro{display:flex;flex-direction:column;gap:16px}
+.intro h1 span{color:var(--amber)}
+.lede{font-size:16.5px;color:#d5dce6}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:700;font-size:13.5px;color:var(--muted)}
+.inrow{display:flex;gap:8px}
+.inrow input{flex:1;min-width:0;font:inherit;font-weight:600;font-size:17px;color:var(--fg);background:rgba(0,0,0,.3);border:1px solid var(--line2);border-radius:12px;padding:0 14px;height:50px}
+.inrow input::placeholder{color:var(--dim);font-weight:500}
+.inrow input:focus{border-color:var(--amber);outline:none;box-shadow:0 0 0 3px var(--amber-s)}
+.err{font-size:13px;color:var(--red);font-weight:600;min-height:18px}
+.avatars{display:flex;gap:10px;flex-wrap:wrap}
+.avbtn{width:62px;height:62px;border-radius:50%;padding:0;border:2px solid transparent;overflow:hidden;background:none;transition:transform .15s,border-color .15s}
+.avbtn svg{width:100%;height:100%;display:block}
+.avbtn[aria-pressed="true"]{border-color:var(--amber);transform:scale(1.06)}
+.scens{display:flex;flex-direction:column;gap:9px}
+.scen{display:grid;grid-template-columns:54px 1fr;gap:12px;align-items:center;text-align:left;background:var(--glass2);border:1px solid var(--line);border-radius:16px;padding:12px;transition:border-color .15s,background .15s}
+.scen:hover{border-color:var(--line2)}
+.scen[aria-pressed="true"]{border-color:var(--amber);background:var(--amber-s)}
+.scen .ic{width:54px;height:54px;border-radius:12px;overflow:hidden}
+.scen .ic svg{width:100%;height:100%;display:block}
+.scen b{display:block;font-size:15.5px;font-weight:800}
+.scen small{display:block;color:var(--muted);font-size:13.5px;line-height:1.4;margin-top:2px}
+.scen .lv{display:inline-block;margin-top:5px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--amber)}
+.rules{font-size:13.5px;color:var(--muted);border:1px solid var(--line);border-radius:12px;padding:10px 12px;line-height:1.5}
+.rules b{color:var(--fg)}
+.best{font-size:13px;color:var(--muted);font-weight:600}
+
+/* FINAL */
+.final{display:flex;flex-direction:column;gap:16px}
+.ending{border-radius:18px;padding:20px;background:linear-gradient(135deg,rgba(255,181,71,.22),rgba(255,181,71,.04));border:1px solid rgba(255,181,71,.4);display:flex;flex-direction:column;gap:8px}
+.ending.lose{background:linear-gradient(135deg,rgba(255,107,107,.2),rgba(255,107,107,.03));border-color:rgba(255,107,107,.4)}
+.ending .row2{display:flex;gap:14px;align-items:center}
+.ending .ava{width:72px;height:72px;flex:0 0 72px}
+.ending h2{font-size:clamp(24px,2.6vw,32px)}
+.ending p{color:#e2e7ee;font-weight:500}
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media (max-width:480px){.statgrid{grid-template-columns:repeat(2,1fr)}}
+.cmp{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--glass2)}
+.cmp small{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.cmp div{font-weight:600;font-size:13.5px;font-variant-numeric:tabular-nums;margin-top:2px}
+.cmp div b{font-size:19px;font-weight:900}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.badge{display:flex;gap:9px;align-items:center;background:var(--glass2);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.badge svg{width:34px;height:34px;flex:0 0 34px}
+.badge b{font-size:13px;line-height:1.2;display:block}.badge small{display:block;font-size:11.5px;color:var(--muted);line-height:1.25}
+.lessons{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.lessons div{padding:10px 12px;border-top:1px solid var(--line);display:grid;grid-template-columns:110px 1fr;gap:10px;font-size:14.5px}
+.lessons div:first-child{border-top:0}
+.lessons small{font-weight:800;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--amber);padding-top:3px}
+@media (max-width:480px){.lessons div{grid-template-columns:1fr;gap:2px}}
+.cta{border-radius:18px;padding:18px;background:linear-gradient(135deg,#1f6b52,#14453a);border:1px solid rgba(90,209,154,.4);display:flex;flex-direction:column;gap:10px}
+.cta .tag{background:rgba(255,255,255,.15);color:#fff;align-self:flex-start}
+.cta h3{font-size:clamp(19px,2vw,23px);font-weight:900}
+.cta p{color:#d9efe6;font-size:15px}
+.gover{display:flex;flex-direction:column;gap:14px}
+.gover .big{font-weight:900;font-size:clamp(30px,3.6vw,42px);color:var(--red);letter-spacing:-.02em;line-height:1.05}
+
+.toasts{position:fixed;z-index:9;left:max(20px,env(safe-area-inset-left,0px));top:calc(64px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:8px;width:min(360px,calc(100vw - var(--panelW) - 60px));pointer-events:none}
+@media (max-width:899px){.toasts{left:50%;transform:translateX(-50%);width:min(92vw,380px)}}
+.toast{display:flex;gap:10px;align-items:center;background:rgba(16,22,34,.95);border:1px solid var(--line2);border-radius:14px;padding:10px 12px;box-shadow:0 12px 30px rgba(0,0,0,.4);animation:tin .45s cubic-bezier(.2,.9,.3,1.2) both}
+.toast.out{animation:tout .35s ease-in forwards}
+.toast svg{width:36px;height:36px;flex:0 0 36px}
+.toast b{font-size:14px;display:block}.toast small{display:block;font-size:12.5px;color:var(--muted)}
+.toast.lv{border-color:var(--amber)}
+@keyframes tin{from{opacity:0;transform:translateY(-10px) scale(.95)}to{opacity:1;transform:none}}
+@keyframes tout{to{opacity:0;transform:translateY(-8px)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="city" aria-label="Панорама города, которая меняется от ваших решений"></canvas>
+
+<header class="hud" id="hud">
+  <div class="brand"><span class="logo"><svg viewBox="0 0 24 24"><path d="M3 21V11h4v10M9 21V5h5v16M16 21V9h4v12" fill="#1c1204"/></svg></span>Мэр на данных</div>
+  <a class="sr" href="https://t.me/skillroute1_bot" target="_blank" rel="noopener"><i>SR</i>Skill Route</a>
+  <div class="chip" id="st-pop" title="Жители"><svg viewBox="0 0 24 24" fill="none" stroke="#6aa8ff" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.8 3.2-5.8 6.5-5.8s5.9 2 6.5 5.8"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.3c3 .2 4.9 1.9 5.5 5.2"/></svg><b>—</b><small>жители</small></div>
+  <div class="chip" id="st-happy" title="Счастье жителей"><svg viewBox="0 0 24 24" fill="none" stroke="#ffb547" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 14.5c1.8 2.3 6.2 2.3 8 0" stroke-linecap="round"/><circle cx="9" cy="10" r=".6" fill="#ffb547"/><circle cx="15" cy="10" r=".6" fill="#ffb547"/></svg><b>—</b><small>счастье</small></div>
+  <div class="chip" id="st-budget" title="Бюджет"><svg viewBox="0 0 24 24" fill="none" stroke="#5ad19a" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2.5"/><circle cx="12" cy="12" r="2.6"/></svg><b>—</b><small>бюджет</small></div>
+  <div class="chip" id="st-trust" title="Доверие команды"><svg viewBox="0 0 24 24" fill="none" stroke="#ff6b9a" stroke-width="2"><path d="M12 20s-8-4.8-8-10.4A4.4 4.4 0 0 1 12 7a4.4 4.4 0 0 1 8 2.6C20 15.2 12 20 12 20z" stroke-linejoin="round"/></svg><b>—</b><small>доверие</small></div>
+  <div class="chip" id="st-month" title="Месяц срока"><svg viewBox="0 0 24 24" fill="none" stroke="#c3cbd8" stroke-width="2"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><b>0/24</b></div>
+  <button class="chip sound" id="soundBtn" aria-pressed="true" aria-label="Музыка" title="Музыка"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l11-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg><span id="soundTxt">Музыка</span></button>
+</header>
+
+<div class="cityInfo" id="cityInfo"><div class="nm" id="cityName">Мэр на данных</div><div class="sub" id="citySub">Выберите город</div><div class="dots" id="dots"></div></div>
+
+<section class="panel" aria-label="Игра">
+  <div class="phead">
+    <div class="ttl"><b id="pTitle">Мэр на данных</b><small id="pSub">Квест для будущих продактов</small></div>
+    <div class="lvl" title="Уровень продакта"><b id="lvlTxt">Стажёр · 0 XP</b><div class="lvlbar"><i id="lvlBar"></i></div></div>
+    <div class="streak" id="streak" data-n="0" title="Серия верных решений"><svg viewBox="0 0 24 24"><path d="M12 22c-4.2 0-7-2.8-7-6.6 0-3.3 2.4-5.2 3.3-7.6.9 1.9 1.9 2.8 2.8 2.8 0-2.8.9-5.6 3.8-7.6-.5 2.8 4.1 5.6 4.1 12.4 0 3.8-2.8 6.6-7 6.6z" fill="#ff9a3c"/><path d="M12 22c-1.9 0-3.3-1.4-3.3-3.3s1.4-3.3 2.4-5.2c.9 1.9 4.2 2.8 4.2 5.2S13.9 22 12 22z" fill="#ffd166"/></svg><span id="streakTxt">×0</span></div>
+  </div>
+  <main id="stage" aria-live="polite"></main>
+</section>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s);
+const stage=$('#stage');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isMobile=()=>innerWidth<900;
+const fmt=n=>Math.round(n).toLocaleString('ru-RU');
+const sleep=ms=>new Promise(r=>setTimeout(r,reduce?0:ms));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,k)=>a+(b-a)*k;
+function hexMix(c1,c2,k){const a=parseInt(c1.slice(1),16),b=parseInt(c2.slice(1),16);const h=v=>Math.round(clamp(v,0,255)).toString(16).padStart(2,'0');return'#'+h(lerp(a>>16,b>>16,k))+h(lerp(a>>8&255,b>>8&255,k))+h(lerp(a&255,b&255,k));}
+const shade=(c,k)=>k>=0?hexMix(c,'#ffffff',k):hexMix(c,'#000000',-k);
+class GameOver extends Error{constructor(r){super('gameover');this.r=r;}}
+
+/* =============== SOUND =============== */
+const Sound=(()=>{
+  let ac=null,master,rev,on=true,timer=null,step=0;
+  try{on=localStorage.getItem('mayor-sound')!=='off';}catch(e){}
+  const mf=m=>440*Math.pow(2,(m-69)/12);
+  function init(){if(ac)return;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    ac=new AC();master=ac.createGain();master.gain.value=0;master.connect(ac.destination);
+    rev=ac.createConvolver();const len=Math.floor(ac.sampleRate*3.4),buf=ac.createBuffer(2,len,ac.sampleRate);
+    for(let c=0;c<2;c++){const d=buf.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.8);}
+    rev.buffer=buf;const rg=ac.createGain();rg.gain.value=.5;rev.connect(rg);rg.connect(master);}
+  const CH=[[57,60,64,67],[53,57,60,64],[48,55,59,64],[52,55,59,62]];
+  const PENT=[69,72,74,76,79,81,84,86];
+  function pad(notes,t0,dur){
+    notes.forEach(m=>{['sine','triangle'].forEach((type,k)=>{const o=ac.createOscillator();o.type=type;o.frequency.value=mf(m);o.detune.value=k?7:-5;
+      const f=ac.createBiquadFilter();f.type='lowpass';f.frequency.value=950;const g=ac.createGain();const pk=k?.010:.016;
+      g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(pk,t0+2.6);g.gain.setValueAtTime(pk,t0+dur-2);g.gain.linearRampToValueAtTime(0,t0+dur+1.8);
+      o.connect(f);f.connect(g);g.connect(master);g.connect(rev);o.start(t0);o.stop(t0+dur+2);});});
+    const o=ac.createOscillator();o.type='sine';o.frequency.value=mf(notes[0]-12);const g=ac.createGain();
+    g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(.028,t0+1.6);g.gain.linearRampToValueAtTime(0,t0+dur+1);o.connect(g);g.connect(master);o.start(t0);o.stop(t0+dur+1.2);}
+  function pluck(m,t0,vol=.028,dec=2.4){const o=ac.createOscillator();o.type='sine';o.frequency.value=mf(m);const g=ac.createGain();
+    g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+.012);g.gain.exponentialRampToValueAtTime(.0001,t0+dec);o.connect(g);g.connect(master);g.connect(rev);o.start(t0);o.stop(t0+dec+.1);}
+  function bar(){if(!ac||!on)return;const t0=ac.currentTime+.05,dur=8;pad(CH[step%4],t0,dur);step++;
+    const n=2+Math.floor(Math.random()*3);for(let i=0;i<n;i++)pluck(PENT[Math.floor(Math.random()*PENT.length)],t0+.8+Math.random()*6.6);}
+  function start(){init();if(!ac)return;if(ac.state==='suspended')ac.resume();if(!on)return;
+    master.gain.cancelScheduledValues(ac.currentTime);master.gain.setValueAtTime(master.gain.value,ac.currentTime);master.gain.linearRampToValueAtTime(.85,ac.currentTime+2.5);
+    if(!timer){bar();timer=setInterval(bar,8000);}}
+  function stop(){if(!ac)return;master.gain.cancelScheduledValues(ac.currentTime);master.gain.setValueAtTime(master.gain.value,ac.currentTime);master.gain.linearRampToValueAtTime(0,ac.currentTime+.5);clearInterval(timer);timer=null;}
+  function toggle(){on=!on;try{localStorage.setItem('mayor-sound',on?'on':'off');}catch(e){}on?start():stop();return on;}
+  function sfx(k){if(!ac||!on)return;const t=ac.currentTime+.01;
+    if(k==='ok'){pluck(81,t,.05,1.4);pluck(88,t+.11,.04,1.6);}
+    else if(k==='bad'){const o=ac.createOscillator();o.type='triangle';o.frequency.setValueAtTime(196,t);o.frequency.exponentialRampToValueAtTime(98,t+.55);const g=ac.createGain();g.gain.setValueAtTime(.05,t);g.gain.exponentialRampToValueAtTime(.0001,t+.8);o.connect(g);g.connect(master);o.start(t);o.stop(t+.85);}
+    else if(k==='lvl'){[72,76,79,84].forEach((m,i)=>pluck(m,t+i*.09,.045,1.6));}
+    else if(k==='tap'){pluck(93,t,.010,.25);}
+    else if(k==='over'){[64,60,57,52].forEach((m,i)=>pluck(m,t+i*.22,.05,2.2));}}
+  document.addEventListener('visibilitychange',()=>{if(!ac)return;if(document.hidden)ac.suspend();else if(on)ac.resume();});
+  return{start,toggle,sfx,get on(){return on;}};
+})();
+const sBtn=$('#soundBtn');
+function syncSound(){sBtn.setAttribute('aria-pressed',Sound.on?'true':'false');$('#soundTxt').textContent=Sound.on?'Музыка':'Тихо';}
+sBtn.onclick=()=>{Sound.toggle();syncSound();};syncSound();
+
+/* =============== FACES =============== */
+let UID=0;
+function face(o,mood='neutral',noBg=false){
+  const f=Object.assign({skin:'#f1c6a6',hair:'short',hc:'#3a2a20',shirt:'#3a7bd5',eye:'#4a3426',bg:'#334'},o);const u='u'+(UID++);
+  const sk=f.skin,dk=shade(sk,-.22),lips=hexMix(sk,'#b5525a',.45),hcD=shade(f.hc,-.28),brow=f.hair==='bald'?'#8d8a92':shade(f.hc,-.15);
+  let s=`<defs><radialGradient id="${u}s" cx=".42" cy=".36" r=".7"><stop offset="0" stop-color="${shade(sk,.16)}"/><stop offset=".7" stop-color="${sk}"/><stop offset="1" stop-color="${shade(sk,-.16)}"/></radialGradient>
+  <linearGradient id="${u}h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shade(f.hc,.18)}"/><stop offset="1" stop-color="${hcD}"/></linearGradient>
+  <linearGradient id="${u}c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shade(f.shirt,.1)}"/><stop offset="1" stop-color="${shade(f.shirt,-.3)}"/></linearGradient>
+  <radialGradient id="${u}b" cx=".5" cy=".35" r=".8"><stop offset="0" stop-color="${shade(f.bg,.18)}"/><stop offset="1" stop-color="${shade(f.bg,-.35)}"/></radialGradient></defs>`;
+  if(!noBg)s+=`<rect width="64" height="64" fill="url(#${u}b)"/>`;
+  if(f.hair==='long')s+=`<path d="M17 30C16 16 24 11.5 32 11.5S48 16 47 30l2 26H15z" fill="url(#${u}h)"/>`;
+  if(f.hair==='bob')s+=`<path d="M17.2 32C16 17 24 12.2 32 12.2S48 17 46.8 32l-.8 11c-2.6 2-5.5 2-7 0V27H25v16c-1.5 2-4.4 2-7 0z" fill="url(#${u}h)"/>`;
+  if(f.hair==='pony')s+=`<path d="M43 20c8 2 9.5 12 6 22-1-7-3.5-12-8-15z" fill="url(#${u}h)"/>`;
+  if(f.hair==='bun')s+=`<circle cx="32" cy="11.5" r="6.2" fill="url(#${u}h)"/>`;
+  s+=`<path d="M7 66c1.5-12 11-18 25-18s23.5 6 25 18z" fill="url(#${u}c)"/>`;
+  if(f.coat)s+=`<path d="M24 49l8 9 8-9 4 17H20z" fill="#2f3f55" opacity=".85"/>`;
+  if(f.tie)s+=`<path d="M28.5 49h7l-1.6 3 1.6 12h-7l1.6-12z" fill="#b8323c"/><path d="M27 48.5l5 4 5-4" fill="none" stroke="#e9edf2" stroke-width="2"/>`;
+  if(f.collar)s+=`<path d="M25 48.5l7 6 7-6" fill="none" stroke="${shade(f.shirt,.45)}" stroke-width="2.2" stroke-linecap="round"/>`;
+  s+=`<path d="M26.5 40h11v8.5c-3.5 3-7.5 3-11 0z" fill="${dk}"/>`;
+  s+=`<ellipse cx="19.4" cy="31.5" rx="2.4" ry="3.6" fill="${shade(sk,-.08)}"/><ellipse cx="44.6" cy="31.5" rx="2.4" ry="3.6" fill="${shade(sk,-.08)}"/>`;
+  s+=`<ellipse cx="32" cy="30" rx="12.6" ry="14.6" fill="url(#${u}s)"/>`;
+  s+=`<path d="M22 40c3 5 7 6.5 10 6.5S39 45 42 40c-2 6-5.5 8.5-10 8.5S24 46 22 40z" fill="${shade(sk,-.12)}" opacity=".55"/>`;
+  if(f.beard)s+=`<path d="M20.5 33c.5 8 5 13.5 11.5 13.5S43 41 43.5 33c-1.5 3.5-3 5-5 5.5-2-1.5-4-2-6.5-2s-4.5.5-6.5 2c-2-.5-3.5-2-5-5.5z" fill="url(#${u}h)" opacity=".92"/>`;
+  if(f.stubble)s+=`<path d="M21 34c1 7 5.5 11.5 11 11.5S42 41 43 34c-2 5-6 8-11 8s-9-3-11-8z" fill="${f.hc}" opacity=".25"/>`;
+  const H={short:`<path d="M19.4 29C18.6 16.5 25.5 13 32 13s13.4 3.5 12.6 16c-2-5.6-6.6-8.8-12.6-8.8-6.2 0-10 2.6-12.6 8.8z" fill="url(#${u}h)"/>`,
+    bob:`<path d="M19.6 28c1.2-10.6 22.6-12 24.8-1-6-5-13-6.6-17-4.6-3 1.6-5.6 3.4-7.8 5.6z" fill="url(#${u}h)"/>`,
+    long:`<path d="M19.4 30C18.6 17 25.5 13.5 32 13.5S45.4 17 44.6 30c-3-6-7.2-9-12.6-9-4 0-8.6 3-12.6 9z" fill="url(#${u}h)"/>`,
+    pony:`<path d="M19.4 29C18.6 16.5 25.5 13 32 13s13.4 3.5 12.6 16c-3-6-7.6-9-12.6-9-5 0-9.6 3-12.6 9z" fill="url(#${u}h)"/>`,
+    bun:`<path d="M19.6 29c-.4-10 5.6-14.6 12.4-14.6S44.8 19 44.4 29c-3.2-5-7.4-7.4-12.4-7.4S22.8 24 19.6 29z" fill="url(#${u}h)"/>`,
+    curly:[[22,21,5.8],[29,16.5,6.3],[36,16.5,6.3],[42.5,21,5.6],[19.6,27.5,4.2],[44.4,27.5,4.2],[32,15,5]].map(c=>`<circle cx="${c[0]}" cy="${c[1]}" r="${c[2]}" fill="url(#${u}h)"/>`).join(''),
+    bald:`<path d="M19.5 34c-1.4-4-1-8.4.8-11.4l1.6 1.2c-1 2.6-1 6.2-.4 10.2zM44.5 34c1.4-4 1-8.4-.8-11.4l-1.6 1.2c1 2.6 1 6.2.4 10.2z" fill="${f.hc}"/>`,
+    hat:`<path d="M18.6 25.5C18.6 14.6 25 11 32 11s13.4 3.6 13.4 14.5z" fill="#f29a2e"/><path d="M18.6 25.5C18.6 14.6 25 11 32 11" fill="none" stroke="#ffc46b" stroke-width="1.4" opacity=".7"/><rect x="15.5" y="24.4" width="33" height="3.4" rx="1.7" fill="#d47f1c"/><rect x="30.6" y="11.5" width="2.8" height="13" rx="1" fill="#d47f1c"/>`};
+  s+=H[f.hair]||H.short;
+  const B={neutral:'M22.5 26.4q4-1.3 7.6 0M33.9 26.4q3.6-1.3 7.6 0',happy:'M22.5 25.8q4-2.6 7.6-.4M33.9 25.4q3.6-2.2 7.6.4',angry:'M22.5 24.8l7.6 2.6M41.5 24.8l-7.6 2.6',sad:'M22.5 27.2q4-2.6 7.6-3.4M33.9 23.8q3.6.8 7.6 3.4',surprised:'M22.5 24.2q4-2.6 7.6-.4M33.9 23.8q3.6-2.2 7.6.4'};
+  s+=`<path d="${B[mood]||B.neutral}" stroke="${brow}" stroke-width="${f.hair==='bald'?2:1.7}" stroke-linecap="round" fill="none"/>`;
+  const ery=mood==='happy'?1.15:mood==='surprised'?2.3:1.75;
+  [26.3,37.7].forEach(x=>{s+=`<ellipse cx="${x}" cy="30.4" rx="2.7" ry="${ery}" fill="#f7f3ee"/><circle cx="${x+.2}" cy="30.5" r="${Math.min(1.55,ery)}" fill="${f.eye}"/><circle cx="${x+.2}" cy="30.5" r="${Math.min(.75,ery*.5)}" fill="#0c0c0c"/><circle cx="${x+.75}" cy="29.9" r=".42" fill="#fff"/><path d="M${x-2.8} ${30.3-ery*.55}q2.8-${ery*1.35} 5.6 0" stroke="${shade(sk,-.42)}" stroke-width=".85" fill="none"/>`;});
+  if(f.wrinkles)s+=`<path d="M22 33.5q2 .8 3.4.4M38.6 33.9q1.4.4 3.4-.4M27 22.5q5-1.2 10 0" stroke="${shade(sk,-.2)}" stroke-width=".6" fill="none"/>`;
+  if(f.freckles)s+=[[24,35],[26,36.2],[22.5,36.6],[40,35],[38,36.2],[41.5,36.6]].map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r=".45" fill="${shade(sk,-.3)}"/>`).join('');
+  s+=`<path d="M31.6 31.2c-.6 2.4-1.6 4.2-1.1 5 .6.7 2 .7 3 .2" stroke="${shade(sk,-.3)}" stroke-width=".9" fill="none" stroke-linecap="round"/>`;
+  const M={happy:`<path d="M26.6 39.2q5.4 5.4 10.8 0q-5.4 1.6-10.8 0z" fill="#fff" stroke="${lips}" stroke-width="1.3" stroke-linejoin="round"/>`,
+    neutral:`<path d="M28 40.2q4 1 8 0" stroke="${lips}" stroke-width="1.8" stroke-linecap="round" fill="none"/>`,
+    angry:`<path d="M27.6 41.4q4.4-2.4 8.8 0" stroke="${lips}" stroke-width="1.8" stroke-linecap="round" fill="none"/>`,
+    sad:`<path d="M28.4 41.2q3.6-1.8 7.2 0" stroke="${lips}" stroke-width="1.7" stroke-linecap="round" fill="none"/>`,
+    surprised:`<ellipse cx="32" cy="40.6" rx="2.4" ry="3" fill="#5a2a2e"/>`};
+  s+=M[mood]||M.neutral;
+  if(f.mustache)s+=`<path d="M25.4 38.2c2.8-2.2 5-1.6 6.6-.4 1.6-1.2 3.8-1.8 6.6.4-2.2 1-4.4 1.4-6.6.2-2.2 1.2-4.4.8-6.6-.2z" fill="${f.hc}"/>`;
+  s+=`<circle cx="22.6" cy="36" r="2.6" fill="#ff8a8a" opacity=".16"/><circle cx="41.4" cy="36" r="2.6" fill="#ff8a8a" opacity=".16"/>`;
+  if(f.glasses)s+=`<circle cx="26.3" cy="30.4" r="4.2" fill="rgba(255,255,255,.06)" stroke="#23262d" stroke-width="1.05"/><circle cx="37.7" cy="30.4" r="4.2" fill="rgba(255,255,255,.06)" stroke="#23262d" stroke-width="1.05"/><path d="M30.5 30q1.5-1 3 0M22.1 29.6l-2.5-.8M41.9 29.6l2.5-.8" stroke="#23262d" stroke-width="1.05" fill="none"/>`;
+  return s;
+}
+const faceSvg=(o,mood)=>`<svg viewBox="0 0 64 64" aria-hidden="true">${face(o,mood)}</svg>`;
+const faceAt=(o,mood,x,y,s)=>`<svg x="${x}" y="${y}" width="${s}" height="${s}" viewBox="0 0 64 64">${face(o,mood,true)}</svg>`;
+
+const P={
+  dana:{n:'Дана',r:'аналитик данных',f:{skin:'#f1c6a6',hair:'bob',hc:'#2f2238',shirt:'#3aa58a',glasses:1,eye:'#4a3426',bg:'#2c5b56'}},
+  gromov:{n:'Громов',r:'советник, 25 лет в мэрии',f:{skin:'#e4a982',hair:'bald',hc:'#b9b9c6',shirt:'#3b4256',tie:1,mustache:1,eye:'#3a3a3a',bg:'#5a3d3d',wrinkles:1}},
+  timur:{n:'Тимур',r:'инженер транспорта',f:{skin:'#c58d66',hair:'hat',hc:'#231812',shirt:'#2f6fd1',stubble:1,eye:'#2a1a10',bg:'#2b4466'}},
+  vera:{n:'Вера Петровна',r:'пенсионерка, 71 год',f:{skin:'#f3d2b9',hair:'bun',hc:'#d9d9e3',shirt:'#c4567f',glasses:1,eye:'#5a6a7a',bg:'#5a4a2a',wrinkles:1}},
+  artem:{n:'Артём',r:'студент колледжа, 19 лет',f:{skin:'#efb995',hair:'curly',hc:'#6b4226',shirt:'#e07b39',eye:'#3a2a1a',bg:'#5a3a24'}},
+  aigul:{n:'Айгуль',r:'мама двоих детей, 34 года',f:{skin:'#dfae88',hair:'pony',hc:'#1e1414',shirt:'#7a64d6',eye:'#2a1a12',bg:'#3b3266',collar:1}},
+  irina:{n:'Ирина Ланская',r:'директор комбината «Полярный»',f:{skin:'#ecc1a1',hair:'bob',hc:'#d8b46a',shirt:'#2b2f3a',collar:1,eye:'#3f5a6a',bg:'#3b3f4f'}},
+  ahmed:{n:'Доктор Ахмедов',r:'главврач детской больницы',f:{skin:'#b67c58',hair:'short',hc:'#1c1c1c',shirt:'#e9eef3',coat:1,beard:1,glasses:1,eye:'#2a1a10',bg:'#2b5060'}},
+  liza:{n:'Лиза',r:'эко-активистка, 24 года',f:{skin:'#f4cdb2',hair:'long',hc:'#b8452e',shirt:'#3f8f4f',eye:'#3f6a4a',bg:'#2e4a33',freckles:1}},
+  max:{n:'Макс',r:'тимлид разработки',f:{skin:'#e8b48f',hair:'short',hc:'#3d2a1c',shirt:'#2a2e38',beard:1,eye:'#3a2a1a',bg:'#22324a'}},
+  nina:{n:'Нина Сергеевна',r:'руководитель МФЦ',f:{skin:'#f0c7a8',hair:'bun',hc:'#7a5a44',shirt:'#3d6fb0',glasses:1,eye:'#4a3a2a',bg:'#3a4a66',collar:1}},
+  olga:{n:'Ольга',r:'журналистка «Новоград.Онлайн»',f:{skin:'#e9be9c',hair:'long',hc:'#2b1d16',shirt:'#a23a4a',eye:'#2a1a12',bg:'#4a2b33'}}
+};
+const MAYORS=[
+  {skin:'#f1c4a0',hair:'short',hc:'#3a2418',shirt:'#2c3e60',tie:1,eye:'#3a5a7a',bg:'#3b4d6b'},
+  {skin:'#f6d0b0',hair:'long',hc:'#8a3a22',shirt:'#3d6fb0',collar:1,eye:'#3f5a4a',bg:'#3a4a66'},
+  {skin:'#a8714f',hair:'curly',hc:'#17120f',shirt:'#2f7a5a',eye:'#2a1a10',bg:'#2e4a3e',beard:1},
+  {skin:'#f3c9a5',hair:'pony',hc:'#d7b25a',shirt:'#8a3a5a',collar:1,eye:'#4a6a8a',bg:'#4a2e44'}
+];
+
+/* =============== STATE / HUD =============== */
+let S;
+const LEVELS=[{n:'Стажёр',x:0},{n:'Junior PM',x:55},{n:'Middle PM',x:130},{n:'Senior PM',x:215},{n:'Head of Product',x:300}];
+function fresh(sc){const c=SCEN[sc];return{scen:sc,pop:c.pop,pop0:c.pop,happy:c.happy,budget:c.budget,trust:50,xp:0,correct:0,total:0,streak:0,bestStreak:0,flags:{},month:0,ci:0,lessons:[],ach:[],name:'',av:0};}
+function levelOf(x){let l=0;LEVELS.forEach((L,i)=>{if(x>=L.x)l=i;});return l;}
+function renderHud(){
+  if(!S){['pop','happy','budget','trust'].forEach(k=>$('#st-'+k+' b').textContent='—');return;}
+  $('#st-pop b').textContent=fmt(S.pop);$('#st-happy b').textContent=Math.round(S.happy)+'%';
+  $('#st-budget b').textContent=fmt(S.budget)+' млн';$('#st-trust b').textContent=Math.round(S.trust);
+  $('#st-month b').textContent=`${S.month}/24`;
+  $('#st-trust').classList.toggle('warn',S.trust<=20);$('#st-happy').classList.toggle('warn',S.happy<=25);
+  $('#st-budget').classList.toggle('warn',S.budget<=10);$('#st-pop').classList.toggle('warn',S.pop<S.pop0*.93);
+  const l=levelOf(S.xp),cur=LEVELS[l],nx=LEVELS[l+1];
+  $('#lvlTxt').textContent=`${cur.n} · ${S.xp} XP`;$('#lvlBar').style.width=nx?((S.xp-cur.x)/(nx.x-cur.x)*100)+'%':'100%';
+  $('#streak').dataset.n=S.streak;$('#streakTxt').textContent='×'+S.streak;
+  const c=SCEN[S.scen];$('#cityName').textContent=c.city;$('#citySub').textContent=`${fmt(S.pop)} жителей · ${c.short}`;
+}
+function renderDots(){const d=$('#dots');d.innerHTML='';if(!S)return;const n=SCEN[S.scen].chapters.length+1;for(let i=0;i<n;i++){const s=document.createElement('span');s.className=i<S.ci?'done':i===S.ci?'now':'';d.appendChild(s);}}
+function floater(id,val,unit){const box=$('#st-'+id);const f=document.createElement('span');f.className='fl '+(val>0?'p':'n');
+  f.textContent=(val>0?'+':'−')+fmt(Math.abs(val))+(unit||'');box.appendChild(f);setTimeout(()=>f.remove(),1600);
+  box.classList.remove('up','down');box.classList.add(val>0?'up':'down');setTimeout(()=>box.classList.remove('up','down'),1500);}
+function apply(fx={},mood){const units={pop:'',happy:'%',budget:' млн',trust:''};
+  for(const k in fx){if(!(k in units)||!fx[k])continue;const b=S[k];S[k]+=fx[k];
+    if(k==='happy')S.happy=clamp(S.happy,0,98);if(k==='trust')S.trust=clamp(S.trust,0,100);
+    const d=S[k]-b;if(d)floater(k,d,units[k]);}
+  renderHud();if(mood==='ok')city.good();if(mood==='bad')city.bad();}
+function guard(){
+  if(S.trust<=10)throw new GameOver({title:'Команда подала в отставку',why:`Доверие команды упало до ${Math.round(S.trust)}. Советники перестали выполнять решения, а горсовет запустил процедуру отставки.`,lesson:'Доверие — тоже ресурс. Его съедают решения без объяснений, скрытые данные и поиск виноватых.'});
+  if(S.happy<=15)throw new GameOver({title:'Город вышел на площадь',why:`Счастье жителей упало до ${Math.round(S.happy)}%. Начались массовые протесты, губернатор отправил вас в отставку.`,lesson:'Метрики команды и отчёты ничего не стоят, если люди чувствуют, что стало хуже. Следи за пользовательской метрикой постоянно.'});
+  if(S.budget<0)throw new GameOver({title:'Бюджет исчерпан',why:'Город не может платить зарплаты учителям и врачам. Область ввела внешнее управление.',lesson:'Каждое решение тратит ограниченный ресурс. Деньги, ушедшие на непроверенную идею, не достанутся проверенной.'});
+  if(S.pop<S.pop0*.9)throw new GameOver({title:'Город опустел',why:`Население упало до ${fmt(S.pop)} — на 10% за ваш срок. Область объединила город с соседним, должность мэра упразднили.`,lesson:'Отток — главная метрика, которую мы пытались спасти. Если решения не останавливают отток, они не решают проблему.'});
+}
+function toast(html,cls,ms=2800){const box=$('#toasts');box.style.top=($('#hud').getBoundingClientRect().bottom+10)+'px';while(box.children.length>=2)box.firstChild.remove();const t=document.createElement('div');t.className='toast '+(cls||'');t.innerHTML=html;box.appendChild(t);setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),400);},ms);}
+const ACH={
+  skeptic:['Скептик','Не поддались HiPPO','eye','#6aa8ff'],survivor:['Ошибка выжившего','Изучили ушедших','door','#a68bff'],
+  star:['Полярная звезда','Выбрали главную метрику','star','#ffb547'],goodhart:['Закон Гудхарта','Метрика ≠ цель','target','#ff6b6b'],
+  voice:['Голос жителей','Сильные вопросы','chat','#ff6b9a'],funnel:['Детектив воронки','Нашли провал','funnel','#a68bff'],
+  hypo:['Архитектор гипотез','Точная гипотеза','bulb','#5ad19a'],power:['Мощность теста','Правильная длительность','scale','#6aa8ff'],
+  patient:['Терпение','Не подглядывали','clock','#ffb547'],pvalue:['p-value','Шум ≠ эффект','chart','#5ad19a'],
+  simpson:['Парадокс Симпсона','Увидели состав выборки','split','#a68bff'],regress:['Возврат к среднему','Не поверили чуду','wave','#6aa8ff'],
+  sunk:['Без сожалений','Невозвратные затраты','anchor','#ff6b6b'],cherry:['Весь график','Поймали черри-пикинг','chart','#ffb547'],
+  rice:['RICE-мастер','Лучший портфель','coin','#5ad19a'],cool:['Хладнокровие','Справились с кризисом','shield','#a68bff'],
+  segment:['Сегментатор','Нашли отстающих','map','#ffb547'],root:['Корень проблемы','Проверили все причины','search','#6aa8ff'],
+  norm:['Нормировка','Частота, а не штуки','scale','#5ad19a'],confound:['Третий фактор','Корреляция ≠ причина','link','#6aa8ff'],
+  pattern:['Читатель графиков','Разделили источники','chart','#a68bff'],outcome:['Договор на результат','Платим за эффект','target','#5ad19a'],
+  did:['Разность разностей','Учли фон','split','#ffb547'],guardrail:['Защитные метрики','Видите цену роста','shield','#5ad19a'],
+  mvp:['MVP','Минимум, который решает','bulb','#ffb547'],tradeoff:['Компромисс','Две метрики сразу','scale','#a68bff'],
+  cohort:['Когорты','Прочитали удержание','chart','#6aa8ff'],streak5:['На кураже','5 верных подряд','fire','#ff9a3c'],reelected:['Второй срок','Выиграли выборы','crown','#ffb547']
+};
+function badgeSvg(id){const a=ACH[id];const c=a[3];const G={
+  eye:'<ellipse cx="20" cy="20" rx="9" ry="6" fill="none" stroke="#fff" stroke-width="2"/><circle cx="20" cy="20" r="2.8" fill="#fff"/>',
+  door:'<rect x="13" y="10" width="14" height="20" rx="1.5" fill="none" stroke="#fff" stroke-width="2"/><circle cx="23" cy="20" r="1.3" fill="#fff"/>',
+  star:'<path d="M20 9l3.3 6.8 7.4 1-5.4 5.2 1.3 7.4L20 25.9l-6.6 3.5 1.3-7.4-5.4-5.2 7.4-1z" fill="#fff"/>',
+  target:'<circle cx="20" cy="20" r="9" fill="none" stroke="#fff" stroke-width="2"/><circle cx="20" cy="20" r="4.5" fill="none" stroke="#fff" stroke-width="2"/><circle cx="20" cy="20" r="1.4" fill="#fff"/>',
+  chat:'<path d="M10 12h20v12H18l-5 4v-4h-3z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>',
+  funnel:'<path d="M10 11h20l-7.5 9v7l-5 2.5V20z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>',
+  bulb:'<path d="M20 9a7 7 0 0 0-4.5 12.4V25h9v-3.6A7 7 0 0 0 20 9z" fill="none" stroke="#fff" stroke-width="2"/><path d="M16.5 29h7" stroke="#fff" stroke-width="2" stroke-linecap="round"/>',
+  scale:'<path d="M20 10v19M12 29h16M11 15h18M11 15l-3 7h6zM29 15l-3 7h6z" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>',
+  clock:'<circle cx="20" cy="20" r="9" fill="none" stroke="#fff" stroke-width="2"/><path d="M20 15v5l3.5 2.5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/>',
+  chart:'<path d="M11 29V11M11 29h18" stroke="#fff" stroke-width="2" fill="none"/><path d="M14 24l4-5 4 3 6-8" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+  split:'<path d="M20 10v8M20 18l-7 10M20 18l7 10" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round"/>',
+  wave:'<path d="M9 22c3-6 6-6 9 0s6 6 9 0 4-4 4-4" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round"/>',
+  anchor:'<path d="M20 11v18M13 23c1 4 4 6 7 6s6-2 7-6M15 15h10" stroke="#fff" stroke-width="2.2" fill="none" stroke-linecap="round"/>',
+  coin:'<circle cx="20" cy="20" r="9" fill="none" stroke="#fff" stroke-width="2"/><path d="M20 14v12M17 17h5a2 2 0 0 1 0 4h-4a2 2 0 0 0 0 4h5" stroke="#fff" stroke-width="1.8" fill="none"/>',
+  shield:'<path d="M20 9l9 3.5v6c0 5.5-3.5 9-9 11.5-5.5-2.5-9-6-9-11.5v-6z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>',
+  map:'<path d="M10 12l6.5-2.5 7 2.5 6.5-2.5v18l-6.5 2.5-7-2.5L10 30z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>',
+  search:'<circle cx="18" cy="18" r="6.5" fill="none" stroke="#fff" stroke-width="2.2"/><path d="M23 23l6 6" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>',
+  link:'<rect x="9" y="16" width="12" height="8" rx="4" fill="none" stroke="#fff" stroke-width="2"/><rect x="19" y="16" width="12" height="8" rx="4" fill="none" stroke="#fff" stroke-width="2"/>',
+  fire:'<path d="M20 31c-4.5 0-7.5-3-7.5-6.8 0-3.6 2.6-5.6 3.5-8.2 1 2 2 3 3 3 0-3 1-6 4-8-.5 3.8 4.5 6.4 4.5 13.2 0 3.8-3 6.8-7.5 6.8z" fill="#fff"/>',
+  crown:'<path d="M10 28l-1-13 6.5 5.5L20 12l4.5 8.5L31 15l-1 13z" fill="#fff"/>'}[a[2]];
+  return `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="19" fill="${c}" opacity=".9"/><circle cx="20" cy="20" r="19" fill="url(#none)"/>${G}</svg>`;}
+function achieve(id){if(!S||S.ach.includes(id))return;S.ach.push(id);const a=ACH[id];toast(`${badgeSvg(id)}<div><b>Достижение: ${a[0]}</b><small>${a[1]}</small></div>`);}
+function addXP(n){if(!n)return;const b=levelOf(S.xp);S.xp=Math.max(0,S.xp+n);const a=levelOf(S.xp);renderHud();
+  if(a>b)setTimeout(()=>{Sound.sfx('lvl');city.good(true);toast(`<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="#ffb547"/><path d="M20 10l8 9h-5v10h-6V19h-5z" fill="#1c1204"/></svg><div><b>Новый уровень: ${LEVELS[a].n}</b><small>Вы растёте как продакт</small></div>`,'lv',3400);},450);}
+function score(kind,pts){S.total++;let g=0;
+  if(kind==='ok'){S.correct++;S.streak++;S.bestStreak=Math.max(S.bestStreak,S.streak);g=pts+(S.streak>=3?4:0);if(S.streak===5)achieve('streak5');Sound.sfx('ok');}
+  else if(kind==='mid'){S.streak=0;g=Math.round(pts/2);S.correct+=.5;Sound.sfx('tap');}
+  else{S.streak=0;Sound.sfx('bad');}
+  addXP(g);return g;}
+
+/* =============== DOM HELPERS =============== */
+function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
+function reveal(n){requestAnimationFrame(()=>{const top=n.offsetTop,bot=top+n.offsetHeight,vt=stage.scrollTop,vh=stage.clientHeight;
+  let target=null;if(bot>vt+vh-8)target=Math.min(top-12,bot-vh+20);else if(top<vt)target=top-12;
+  if(target!=null)stage.scrollTo({top:Math.max(0,target),behavior:reduce?'auto':'smooth'});});}
+function follow(){const gap=stage.scrollHeight-stage.scrollTop-stage.clientHeight;if(gap>0&&gap<160)stage.scrollTop=stage.scrollHeight;}
+function clearStage(){stage.innerHTML='';stage.scrollTop=0;}
+function add(n){stage.appendChild(n);reveal(n);return n;}
+function card(html){return add(el('div','card',html));}
+let skipNow=false,typing=0;
+stage.addEventListener('click',e=>{if(typing&&!e.target.closest('button,a,input'))skipNow=true;});
+function type(node,text){return new Promise(res=>{
+  if(reduce){node.textContent=text;res();return;}
+  let i=0;typing++;node.classList.add('typing');
+  const done=()=>{node.textContent=text;node.classList.remove('typing');typing=Math.max(0,typing-1);skipNow=false;follow();res();};
+  const step=()=>{if(skipNow)return done();i+=3;node.textContent=text.slice(0,i);follow();if(i>=text.length)return done();setTimeout(step,16);};step();});}
+async function say(who,text,mood='neutral'){const p=P[who];const row=el('div','line');row.append(el('div','ava',faceSvg(p.f,mood)));
+  const b=el('div','bubble',`<div class="who">${p.n}<em>${p.r}</em></div>`);const t=el('p','txt');b.appendChild(t);row.appendChild(b);add(row);await type(t,text);await sleep(180);}
+async function narr(text){const row=el('div','narr');const t=el('p','txt');row.appendChild(t);add(row);await type(t,text.replace(/\{name\}/g,S.name));await sleep(160);}
+function wxFor(month,o){const m0=(8+month-1)%12;const winter=[11,0,1].includes(m0);return Object.assign({rain:0,snow:winter?.55:0,fog:0},o||{});}
+const MONTHS=['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+function head(title,month,tod,wx){S.month=month;city.sky(tod,wxFor(month,wx));clearStage();renderHud();renderDots();
+  const total=SCEN[S.scen].chapters.length;const m0=(8+month-1)%12;
+  $('#pSub').textContent=`Глава ${S.ci+1} из ${total} · ${MONTHS[m0]}`;
+  add(el('div','chHead',`<div class="meta"><span class="tag">Глава ${S.ci+1}</span><span class="tag g">Месяц ${month} из 24 · ${MONTHS[m0]}</span></div><h2>${title}</h2>`));}
+function choiceList(opts){return new Promise(res=>{const box=el('div','choices');
+  opts.forEach((o,i)=>{const b=el('button','choice',`<span class="key">${'ABCDE'[i]}</span><span>${o.t}</span>`);
+    b.onclick=()=>{[...box.children].forEach(c=>c.disabled=true);const k=o.ok===true?'ok':o.ok==='mid'?'mid':'bad';b.classList.add('picked',k);
+      if(k!=='ok'){const r=opts.findIndex(x=>x.ok===true);if(r>-1)box.children[r].classList.add('right');}res(o);};box.appendChild(b);});add(box);});}
+const VERD={ok:['Решение по данным','В точку','Сильный ход'],mid:['Наполовину','Есть нюанс'],bad:['Мимо','Ошибка','Плохая идея']};
+function feedback({kind,title,why,lesson,xp,tag}){if(lesson)S.lessons.push({tag:tag||SCEN[S.scen].tagOf(S.ci),text:lesson});
+  return new Promise(res=>{const v=VERD[kind][Math.floor(Math.random()*VERD[kind].length)];
+    const f=el('div','fb '+kind,`<div class="fbTop"><span class="verdict">${v}</span>${xp?`<span class="xp">+${xp} XP${S.streak>=3&&kind==='ok'?` · серия ×${S.streak}`:''}</span>`:''}</div>${title?`<h3>${title}</h3>`:''}${why?`<p>${why}</p>`:''}${lesson?`<div class="lesson"><span>Урок продакта</span><p>${lesson}</p></div>`:''}`);
+    const btn=el('button','btn','Дальше');btn.onclick=()=>{btn.disabled=true;Sound.sfx('tap');res();};f.appendChild(btn);add(f);});}
+function nextBtn(label,cls){return new Promise(res=>{const b=el('button','btn '+(cls||''),label||'Дальше');b.onclick=()=>{b.disabled=true;Sound.sfx('tap');res();};add(b);});}
+function hintOffer(text){const row=el('div','row');const b=el('button','btn ghost','Подсказка Даны · −3 XP');row.appendChild(b);add(row);
+  b.onclick=()=>{b.remove();S.xp=Math.max(0,S.xp-3);renderHud();row.appendChild(el('div','hintBox',`<b>Дана:</b> ${text}`));reveal(row);};}
+async function quiz(opts,{pts=10,hint,ach,tag}={}){
+  if(hint)hintOffer(hint);
+  const o=await choiceList(opts);
+  if(o.fatal){Sound.sfx('bad');if(o.fx)apply(o.fx,'bad');await sleep(500);throw new GameOver(o.fatal);}
+  const kind=o.ok===true?'ok':o.ok==='mid'?'mid':'bad';const xp=score(kind,pts);
+  if(o.flag)[].concat(o.flag).forEach(f=>S.flags[f]=true);
+  if(kind==='ok'&&ach)achieve(ach);
+  apply(o.fx||{},kind==='ok'?'ok':kind==='bad'?'bad':null);
+  if(o.react)await say(o.react[0],o.react[1],o.react[2]);
+  await feedback({kind,title:o.title,why:o.why,lesson:o.lesson,xp,tag});
+  guard();return o;}
+async function newspaper(headline,body){const c=SCEN[S.scen];const m0=(8+S.month-1)%12;
+  add(el('div','paper',`<div class="mast"><b>${c.paper}</b><small>${MONTHS[m0]}, месяц ${S.month}</small></div><div class="headline">${headline}</div><p>${body}</p>`));
+  await sleep(400);await nextBtn('Читать дальше');}
+function bars(title,sub,data,hot){const p=card(`<div class="ph"><h3>${title}</h3><small>${sub}</small></div>`);const bx=el('div','bars');const mx=Math.max(...data.map(d=>d[1]));
+  data.forEach((d,i)=>bx.appendChild(el('div','bar'+(i===hot?' hot':''),`<span>${d[0]}</span><div class="track"><div class="fill"></div></div><span class="v">${d[1]}%</span>`)));
+  p.appendChild(bx);setTimeout(()=>[...bx.querySelectorAll('.fill')].forEach((f,i)=>f.style.width=data[i][1]/mx*100+'%'),reduce?0:120);return p;}
+function table(title,sub,html){return card(`<div class="ph"><h3>${title}</h3>${sub?`<small>${sub}</small>`:''}</div><div class="scroller">${html}</div>`);}
+
+/* line/bar chart svg (dark) */
+function chartSvg({labels,series,yMax,yStep,unit='',type='line',hl=[],w=560,h=230,goal}){
+  const L=40,R=12,T=14,B=28,x=i=>L+(type==='bar'?(i+.5)*(w-L-R)/labels.length:i*(w-L-R)/(labels.length-1)),y=v=>T+(1-v/yMax)*(h-T-B);
+  let s=`<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;min-width:340px;display:block" role="img">`;
+  for(let v=0;v<=yMax;v+=yStep)s+=`<line x1="${L}" x2="${w-R}" y1="${y(v)}" y2="${y(v)}" stroke="rgba(255,255,255,.08)"/><text x="${L-8}" y="${y(v)+4}" fill="#8592a6" font-size="11.5" font-family="Golos Text" text-anchor="end">${v}${unit}</text>`;
+  const step=Math.ceil(labels.length/12);labels.forEach((l,i)=>{if(i%step===0)s+=`<text x="${x(i)}" y="${h-8}" fill="#8592a6" font-size="11.5" font-family="Golos Text" text-anchor="middle">${l}</text>`;});
+  if(goal!=null)s+=`<line x1="${L}" x2="${w-R}" y1="${y(goal)}" y2="${y(goal)}" stroke="#5ad19a" stroke-dasharray="5 5" stroke-width="1.5"/><text x="${w-R}" y="${y(goal)-6}" fill="#5ad19a" font-size="11.5" font-weight="700" font-family="Golos Text" text-anchor="end">норма ${goal}${unit}</text>`;
+  series.forEach(se=>{if(type==='bar'){const bw=(w-L-R)/labels.length*.62;se.v.forEach((v,i)=>{s+=`<rect x="${x(i)-bw/2}" y="${y(v)}" width="${bw}" height="${y(0)-y(v)}" rx="4" fill="${hl.includes(i)?se.hc||'#ffb547':se.c}"/>`;});}
+    else{s+=`<path d="${se.v.map((v,i)=>(i?'L':'M')+x(i)+' '+y(v)).join('')}" fill="none" stroke="${se.c}" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>`;
+      s+=`<path d="${se.v.map((v,i)=>(i?'L':'M')+x(i)+' '+y(v)).join('')}L${x(se.v.length-1)} ${y(0)}L${x(0)} ${y(0)}Z" fill="${se.c}" opacity=".1"/>`;}});
+  return s+'</svg>';}
+
+/* =============== ILLUSTRATIONS =============== */
+function grad(id,a,b,v=1){return `<linearGradient id="${id}" x1="0" y1="0" x2="${v?0:1}" y2="${v?1:0}"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient>`;}
+function person(x,y,s,shirt,skin,hair,mood){return `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-14 60c0-22 6-30 14-30s14 8 14 30z" fill="${shirt}"/><path d="M-14 60c0-22 6-30 14-30" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="2"/><circle cx="0" cy="18" r="11" fill="${skin}"/><path d="M-11 16c0-9 5-13 11-13s11 4 11 13c-3-5-6.5-6.5-11-6.5S-8 11-11 16z" fill="${hair}"/>${mood==='sad'?'<path d="M-4 24q4-2 8 0" stroke="rgba(0,0,0,.45)" stroke-width="1.4" fill="none"/>':''}</g>`;}
+function sceneOffice(){const c=SCEN[S.scen];return `<div class="card" style="padding:0;overflow:hidden"><svg viewBox="0 0 640 250" role="img" aria-label="Кабинет мэра" style="display:block;width:100%;height:auto">
+  <defs>${grad('ow','#3a3530','#262320')}${grad('osky',c.officeSky[0],c.officeSky[1])}${grad('odesk','#6b4a32','#3d2a1d')}<radialGradient id="olamp" cx=".2" cy=".2" r=".9"><stop offset="0" stop-color="rgba(255,200,140,.25)"/><stop offset="1" stop-color="rgba(0,0,0,0)"/></radialGradient></defs>
+  <rect width="640" height="250" fill="url(#ow)"/><rect width="640" height="250" fill="url(#olamp)"/>
+  <rect x="190" y="22" width="260" height="140" rx="4" fill="url(#osky)"/>
+  ${Array.from({length:12},(_,i)=>{const bx=196+i*21+(i%3)*2,bh=30+((i*37)%60);return `<rect x="${bx}" y="${162-bh}" width="18" height="${bh}" fill="rgba(20,26,40,.75)"/>`+Array.from({length:Math.floor(bh/9)},(_,r)=>`<rect x="${bx+4}" y="${166-bh+r*9}" width="3" height="3" fill="${(i*7+r)%3?'rgba(255,214,140,.7)':'rgba(255,255,255,.08)'}"/><rect x="${bx+11}" y="${166-bh+r*9}" width="3" height="3" fill="${(i*5+r)%4?'rgba(255,214,140,.55)':'rgba(255,255,255,.08)'}"/>`).join('');}).join('')}
+  <rect x="190" y="22" width="260" height="140" rx="4" fill="none" stroke="#1a1714" stroke-width="8"/><path d="M320 22v140" stroke="#1a1714" stroke-width="6"/>
+  ${Array.from({length:9},(_,i)=>`<rect x="190" y="${26+i*15}" width="260" height="2" fill="rgba(0,0,0,.18)"/>`).join('')}
+  <rect x="480" y="40" width="120" height="76" rx="4" fill="#f1ede6"/><path d="M492 102l20-18 18 9 22-26 22 12" fill="none" stroke="#d64545" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><text x="492" y="58" font-family="Golos Text" font-weight="800" font-size="11" fill="#3a3530">${c.chartLabel}</text>
+  <rect x="40" y="46" width="110" height="6" fill="#4a3a2c"/><rect x="40" y="86" width="110" height="6" fill="#4a3a2c"/>${[44,56,66,80,92,106,120,134].map((x,i)=>`<rect x="${x}" y="${i%2?30:33}" width="${i%3?10:12}" height="${i%2?16:13}" fill="${['#8a3a3a','#3a5a8a','#3a7a5a','#a07a2a','#5a4a7a','#7a5a3a','#4a6a6a','#8a5a6a'][i]}"/>`).join('')}
+  <path d="M584 160c-6-30 10-40 4-62M592 160c4-26 20-30 14-52M576 160c-12-20-4-36-14-48" stroke="#3f7a4a" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M570 160h36l-4 30h-28z" fill="#5a4636"/>
+  ${faceAt(P.gromov.f,'happy',34,104,128)}${faceAt(MAYORS[S.av],'neutral',256,110,128)}${faceAt(P.dana.f,'neutral',478,104,128)}
+  <rect x="120" y="200" width="400" height="60" rx="6" fill="url(#odesk)"/><rect x="120" y="200" width="400" height="4" fill="rgba(255,255,255,.12)"/>
+  <rect x="270" y="186" width="100" height="20" rx="3" fill="#c9a24a"/><text x="320" y="200" text-anchor="middle" font-family="Golos Text" font-weight="800" font-size="11" fill="#2a1e0a">МЭР ${esc(S.name).toUpperCase().slice(0,12)}</text>
+  <rect x="160" y="190" width="70" height="12" rx="1" fill="#f3f0ea" transform="rotate(-5 195 196)"/><rect x="420" y="191" width="56" height="10" rx="1" fill="#e9eef5" transform="rotate(4 448 196)"/>
+  </svg></div>`;}
+function sceneStop(n,gone){let ppl='';const sh=['#3a5a8a','#8a3a5a','#3a7a5a','#a0682a','#5a4a8a','#7a3a3a','#4a6a7a','#6a5a3a','#3a4a6a'],sk=['#f1c6a6','#c58d66','#efb995','#dfae88','#f3d2b9'],hr=['#2a1a10','#5a3a22','#1a1a1a','#d9d9e3','#8a5a2a'];
+  for(let i=0;i<n;i++){const g=i>=n-gone;ppl+=`<g style="opacity:${g?.14:1};transition:opacity .9s ${i*.08}s">${person(150+i*38,128,.85,sh[i%9],sk[i%5],hr[i%5],'sad')}</g>`;}
+  return `<div class="card" style="padding:0;overflow:hidden"><svg viewBox="0 0 640 220" role="img" aria-label="Остановка автобуса 22" style="display:block;width:100%;height:auto"><defs>${grad('ss','#7f9fbf','#d9e4ee')}${grad('sg','#9aa3ad','#6c747e')}</defs>
+  <rect width="640" height="220" fill="url(#ss)"/>${[[20,60,70],[100,40,60],[520,50,80],[590,70,50]].map(b=>`<rect x="${b[0]}" y="${b[1]}" width="${b[2]}" height="${190-b[1]}" fill="rgba(70,85,105,.55)"/>`).join('')}
+  <rect x="0" y="186" width="640" height="34" fill="#3d434c"/><rect x="0" y="180" width="640" height="8" fill="#b7bcc3"/>
+  <rect x="120" y="70" width="390" height="10" rx="3" fill="#2f4a6e"/><rect x="132" y="80" width="5" height="102" fill="#3a3f46"/><rect x="494" y="80" width="5" height="102" fill="#3a3f46"/>
+  <rect x="138" y="82" width="354" height="58" fill="rgba(200,225,245,.25)"/><rect x="138" y="82" width="354" height="58" fill="none" stroke="rgba(255,255,255,.25)"/>
+  ${ppl}
+  <rect x="556" y="60" width="5" height="122" fill="#3a3f46"/><circle cx="558" cy="52" r="18" fill="#e6b422"/><text x="558" y="58" text-anchor="middle" font-family="Golos Text" font-weight="900" font-size="15" fill="#1a1a1a">22</text>
+  <rect x="520" y="82" width="78" height="40" rx="4" fill="#111820"/><text x="559" y="98" text-anchor="middle" font-family="Golos Text" font-size="10" fill="#9aa">интервал</text><text x="559" y="115" text-anchor="middle" font-family="Golos Text" font-weight="800" font-size="15" fill="#ff7b6b">40 мин</text>
+  </svg></div>`;}
+function sceneRiver(){return `<div class="card" style="padding:0;overflow:hidden"><svg viewBox="0 0 640 220" role="img" aria-label="Набережная с мёртвой рыбой и комбинатом вдали" style="display:block;width:100%;height:auto"><defs>${grad('rs','#9fb2c2','#d8d4c4')}${grad('rw','#5a6648','#3a4430')}</defs>
+  <rect width="640" height="220" fill="url(#rs)"/><path d="M0 120h640v-6l-40-4-60 2-80-6-90 4-120-3-110 5-90-3-50 3z" fill="#7d8a8a"/>
+  ${[[400,40,14],[430,30,12],[470,52,16]].map(c=>`<rect x="${c[0]}" y="${c[1]}" width="${c[2]}" height="${115-c[1]}" fill="#5c6366"/><circle cx="${c[0]+c[2]/2}" cy="${c[1]-12}" r="16" fill="rgba(140,140,130,.55)"/><circle cx="${c[0]+c[2]/2+14}" cy="${c[1]-28}" r="20" fill="rgba(150,150,140,.4)"/>`).join('')}
+  <rect x="360" y="80" width="160" height="40" fill="#6a7174"/>
+  <rect y="120" width="640" height="70" fill="url(#rw)"/>${Array.from({length:14},(_,i)=>`<ellipse cx="${30+i*44+(i%3)*9}" cy="${140+(i*13)%38}" rx="9" ry="3.2" fill="#e8e6dc" opacity=".85" transform="rotate(${(i*29)%40-20} ${30+i*44} ${140+(i*13)%38})"/>`).join('')}
+  <rect y="186" width="640" height="34" fill="#8c8678"/><rect y="182" width="640" height="6" fill="#a59f90"/>
+  ${faceAt(P.liza.f,'angry',40,120,90)}${faceAt(P.irina.f,'neutral',510,120,90)}</svg></div>`;}
+function sceneQueue(){let q='';const sh=['#3a5a8a','#8a3a5a','#3a7a5a','#a0682a','#5a4a8a','#7a3a3a','#4a6a7a','#6a5a3a'];for(let i=0;i<11;i++)q+=person(60+i*48,120,.8,sh[i%8],['#f1c6a6','#c58d66','#efb995','#f3d2b9'][i%4],['#2a1a10','#d9d9e3','#1a1a1a','#8a5a2a'][i%4],'sad');
+  return `<div class="card" style="padding:0;overflow:hidden"><svg viewBox="0 0 640 210" role="img" aria-label="Очередь в МФЦ" style="display:block;width:100%;height:auto"><defs>${grad('qw','#d9dde2','#b9bec6')}</defs>
+  <rect width="640" height="210" fill="url(#qw)"/><rect y="170" width="640" height="40" fill="#8e949c"/>
+  <rect x="440" y="20" width="170" height="64" rx="6" fill="#141b26"/><text x="525" y="44" text-anchor="middle" font-family="Golos Text" font-size="12" fill="#9aa">Талон А-217 · ожидание</text><text x="525" y="72" text-anchor="middle" font-family="Golos Text" font-weight="900" font-size="26" fill="#ff7b6b">2:30</text>
+  <text x="30" y="46" font-family="Golos Text" font-weight="900" font-size="22" fill="#4a5462">МФЦ «Новоград»</text>
+  ${q}</svg></div>`;}
+function sceneApp(){return `<div class="phone"><div class="screen" style="gap:10px">
+  <div style="display:flex;justify-content:space-between;font-size:12px;color:#8592a6"><span>9:41</span><span>Новоград.Онлайн</span></div>
+  <div style="font-weight:800;font-size:18px">Вход в приложение</div>
+  <div style="font-size:13px;color:#9eabbd">Подтвердите личность через портал госуслуг</div>
+  <div style="background:#1b2331;border-radius:10px;padding:10px;font-size:13.5px;color:#9eabbd">Логин портала</div>
+  <div style="background:#1b2331;border-radius:10px;padding:10px;font-size:13.5px;color:#9eabbd">Пароль · <span style="color:#ff6b6b">забыли?</span></div>
+  <div style="background:#3d6fb0;border-radius:10px;padding:11px;text-align:center;font-weight:800">Подтвердить</div>
+  <div style="font-size:12px;color:#6f7c90;text-align:center">Шаг 3 из 4</div></div></div>`;}
+
+/* =============== MINIGAMES =============== */
+async function mgChips(o){const p=card(`<div class="ph"><h3>${o.title}</h3><small>${o.sub}</small></div>`);const ch=el('div','chips');
+  o.items.forEach(it=>{const c=el('button','ch',it.t);c.setAttribute('aria-pressed','false');c.onclick=()=>{Sound.sfx('tap');c.setAttribute('aria-pressed',c.getAttribute('aria-pressed')==='true'?'false':'true');};it.el=c;ch.appendChild(c);});
+  p.appendChild(ch);await nextBtn('Проверить');let right=0;
+  o.items.forEach(it=>{const sel=it.el.getAttribute('aria-pressed')==='true';it.el.disabled=true;if(sel===it.v)right++;else it.el.classList.add('miss');it.el.classList.add(it.v?'yes':'no');it.el.setAttribute('aria-pressed','false');it.el.textContent=(it.v?o.yes+': ':o.no+': ')+it.t;});
+  const n=o.items.length,kind=right===n?'ok':right>=n-2?'mid':'bad';const xp=score(kind,o.pts||10);if(kind==='ok'&&o.ach)achieve(o.ach);
+  apply({trust:right===n?3:right<=n-3?-2:0},kind==='ok'?'ok':kind==='bad'?'bad':null);
+  await feedback({kind,xp,title:`${right} из ${n} верно`,why:o.why,lesson:o.lesson});guard();return right;}
+async function mgInterview(o){const res=el('div','residents');o.people.forEach(id=>{const p=P[id];res.appendChild(el('div','res',`<div class="ava">${faceSvg(p.f,'neutral')}</div><b>${p.n}</b><small>${p.r}</small>`));});add(res);
+  const pn=card(`<div class="ph"><h3>Выберите 3 вопроса</h3><small id="qc">0 из 3</small></div>`);const list=el('div','qlist');const sel=new Set();
+  const go=el('button','btn','Задать вопросы');go.disabled=true;
+  o.qs.forEach((q,i)=>{const b=el('button','q',`<span class="box">${i+1}</span><span>${q.t}</span>`);b.setAttribute('aria-pressed','false');
+    b.onclick=()=>{if(sel.has(i))sel.delete(i);else{if(sel.size>=3)return;sel.add(i);}Sound.sfx('tap');b.setAttribute('aria-pressed',sel.has(i)?'true':'false');$('#qc').textContent=`${sel.size} из 3`;go.disabled=sel.size!==3;};q.el=b;list.appendChild(b);});
+  pn.append(list,go);reveal(pn);await new Promise(r=>go.onclick=r);go.disabled=true;o.qs.forEach(q=>q.el.disabled=true);
+  let good=0;for(const i of [...sel].sort((a,b)=>a-b)){const q=o.qs[i];if(q.g==='g')good++;if(q.g!=='m')q.el.classList.add(q.g);
+    const qa=el('div','qa',`<span class="qv ${q.g}">${q.g==='g'?'Сильный вопрос':q.g==='b'?'Слабый вопрос':'Так себе'} · ${q.note}</span><h4>«${q.t}»</h4>`);add(qa);
+    for(let k=0;k<o.people.length;k++){await sleep(320);const p=P[o.people[k]];qa.appendChild(el('div','ans',`<span class="mini">${faceSvg(p.f,q.g==='g'&&k===0?'sad':'neutral')}</span><span><b>${p.n}:</b> ${q.a[k]}</span>`));reveal(qa);}}
+  const kind=good===3?'ok':good===2?'mid':'bad';const xp=score(kind,12);if(good===3)achieve('voice');apply({trust:good*2-2},kind==='ok'?'ok':kind==='bad'?'bad':null);
+  await feedback({kind,xp,title:`Сильных вопросов: ${good} из 3`,why:o.why,lesson:o.lesson});guard();return good;}
+async function mgFunnel(o){const p=card(`<div class="ph"><h3>${o.title}</h3><small>${o.sub}</small></div>`);const fun=el('div','funnel');const mx=o.steps[0][1];
+  const pick=new Promise(res=>{o.steps.forEach((s,i)=>{if(i){const d=Math.round((1-s[1]/o.steps[i-1][1])*100);fun.appendChild(el('div','drop'+(d>35?' big':''),`↓ потеряли ${d}%`));}
+    const b=el('button','fstep',`<span class="flabel"><span>${s[0]}</span><em>${fmt(s[1])}</em></span><span class="ftrack"><span class="fbar"></span></span>`);b.onclick=()=>res(i);fun.appendChild(b);s.btn=b;
+    setTimeout(()=>b.querySelector('.fbar').style.width=(s[1]/mx*100)+'%',reduce?0:150+i*120);});});
+  p.appendChild(fun);const i=await pick;o.steps.forEach(s=>s.btn.disabled=true);fun.classList.add('revealed');
+  const ok=i===o.ans;o.steps[o.ans].btn.classList.add('ok');if(!ok)o.steps[i].btn.classList.add('bad');
+  if(o.onPick)o.onPick();const xp=score(ok?'ok':'bad',10);if(ok)achieve('funnel');apply(ok?{trust:3}:{trust:-1},ok?'ok':'bad');
+  await feedback({kind:ok?'ok':'bad',xp,title:ok?o.okTitle:'Смотрите на перепады между шагами',why:o.why,lesson:o.lesson});guard();}
+async function mgHypo(o){const p=card(`<div class="ph"><h3>Конструктор гипотезы</h3><small>по одной детали в каждом ряду</small></div>`);
+  const prev=el('div','preview');const wrap=el('div','slots');const ch=o.slots.map(()=>null);const chk=el('button','btn','Проверить гипотезу');chk.disabled=true;
+  const render=()=>{const w=i=>ch[i]==null?`<span class="empty">${o.slots[i].k.toLowerCase()}</span>`:`<span>${o.slots[i].o[ch[i]][0]}</span>`;prev.innerHTML=o.tpl(w);chk.disabled=ch.some(c=>c==null);};
+  o.slots.forEach((s,si)=>{const row=el('div','slot',`<b>${s.k}</b>`);const cs=el('div','chips');
+    s.o.forEach((op,oi)=>{const b=el('button','ch',op[0]);b.setAttribute('aria-pressed','false');b.onclick=()=>{Sound.sfx('tap');ch[si]=oi;[...cs.children].forEach((c,k)=>c.setAttribute('aria-pressed',k===oi?'true':'false'));render();};cs.appendChild(b);});
+    row.appendChild(cs);wrap.appendChild(row);s.cs=cs;});
+  p.append(prev,wrap,chk);render();reveal(p);await new Promise(r=>chk.onclick=r);chk.disabled=true;
+  let right=0;o.slots.forEach((s,si)=>{[...s.cs.children].forEach((c,k)=>{c.disabled=true;c.setAttribute('aria-pressed','false');if(s.o[k][1])c.classList.add('no');else if(k===ch[si])c.classList.add('yes');});if(s.o[ch[si]][1])right++;});
+  const n=o.slots.length,kind=right===n?'ok':right>=n-2?'mid':'bad';const xp=score(kind,12);if(kind==='ok')achieve('hypo');apply({trust:kind==='ok'?3:0},kind==='ok'?'ok':kind==='bad'?'bad':null);
+  await feedback({kind,xp,title:`Точных деталей: ${right} из ${n}`,why:o.why,lesson:o.lesson});guard();return right;}
+async function mgAB(o){
+  const p=card(`<div class="ph"><h3>${o.title}</h3><small id="abday">день 0 из ${o.N}</small></div>`);const cv=el('canvas','abc');p.appendChild(cv);
+  p.appendChild(el('div','abmeta',`<span><i class="lg" style="background:#8a96a8"></i>Контроль: <b id="abC">—</b></span><span><i class="lg" style="background:#ffb547"></i>Тест: <b id="abT">—</b></span><span>наблюдений: <b id="abN">0</b></span>`));reveal(p);
+  let sd=o.seed||9;const rg=()=>{sd=(sd*16807)%2147483647;return(sd-1)/2147483646;};const ga=()=>{const u=rg()||.01,v=rg();return Math.sqrt(-2*Math.log(u))*Math.cos(6.283*v);};
+  const N=o.N,C=[],T=[];for(let d=1;d<=N;d++){const a=.075/Math.sqrt(d);C.push(o.c+ga()*a);T.push(o.t+ga()*a+(d<=4?.12*(1-(d-1)/4):0));}
+  if(o.peekDay)T[o.peekDay-1]=Math.max(T[o.peekDay-1],o.peekVal);for(let d=Math.max(0,N-4);d<N;d++){C[d]=o.c+(C[d]-o.c)*.3;T[d]=o.t+(T[d]-o.t)*.3;}
+  const ctx=cv.getContext('2d');
+  const draw=n=>{const w=cv.clientWidth,h=cv.clientHeight,dp=Math.min(2,devicePixelRatio||1);cv.width=w*dp;cv.height=h*dp;ctx.setTransform(dp,0,0,dp,0,0);
+    const L=38,R=10,Tp=10,B=24,lo=o.lo||.2,hi=o.hi||.7,y=v=>Tp+(1-(v-lo)/(hi-lo))*(h-Tp-B),x=d=>L+(d-1)/Math.max(1,N-1)*(w-L-R);
+    ctx.font='500 11.5px "Golos Text",sans-serif';ctx.fillStyle='#8592a6';
+    for(let v=lo;v<=hi+1e-9;v+=.1){ctx.strokeStyle='rgba(255,255,255,.07)';ctx.beginPath();ctx.moveTo(L,y(v));ctx.lineTo(w-R,y(v));ctx.stroke();ctx.fillText(Math.round(v*100)+'%',2,y(v)+4);}
+    [1,Math.ceil(N/2),N].forEach(d=>ctx.fillText('день '+d,clamp(x(d)-16,L,w-R-44),h-6));
+    if(o.goal){ctx.setLineDash([5,5]);ctx.strokeStyle='#5ad19a';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(L,y(o.goal));ctx.lineTo(w-R,y(o.goal));ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#5ad19a';ctx.fillText('цель '+Math.round(o.goal*100)+'%',L+4,y(o.goal)-5);}
+    const line=(arr,col)=>{if(!n)return;ctx.strokeStyle=col;ctx.lineWidth=2.6;ctx.lineJoin='round';ctx.beginPath();for(let d=1;d<=n;d++){const X=x(d),Y=y(clamp(arr[d-1],lo,hi));d===1?ctx.moveTo(X,Y):ctx.lineTo(X,Y);}ctx.stroke();
+      ctx.fillStyle=col;ctx.beginPath();ctx.arc(x(n),y(clamp(arr[n-1],lo,hi)),4.5,0,7);ctx.fill();};
+    line(C,'#8a96a8');line(T,'#ffb547');};
+  draw(0);await nextBtn('Запустить тест');
+  for(let d=1;d<=N;d++){draw(d);$('#abday').textContent=`день ${d} из ${N}`;$('#abC').textContent=(C[d-1]*100).toFixed(1)+'%';$('#abT').textContent=(T[d-1]*100).toFixed(1)+'%';$('#abN').textContent='2 × '+fmt(d*o.perDay);
+    if(o.peekDay&&d===o.peekDay){await say(o.peekWho,o.peekText.replace('%v',Math.round(T[d-1]*100)),'happy');
+      const pk=el('div','peek',`<b>Остановить тест сейчас?</b>`);const r=el('div','row');const st=el('button','btn red','Остановить и раскатить');const cn=el('button','btn ghost','Продолжить тест');r.append(st,cn);pk.appendChild(r);add(pk);
+      const a=await new Promise(res=>{st.onclick=()=>res('stop');cn.onclick=()=>res('go');});st.disabled=cn.disabled=true;if(a==='stop')return{stopped:true};
+      await say('dana','Правильно. Пара сотен наблюдений — это шум. Дождёмся объёма, который мы заложили заранее.','happy');}
+    await sleep(reduce?0:Math.max(60,700/N));}
+  return{stopped:false,c:C[N-1],t:T[N-1]};}
+async function mgToggle(o){const p=card(`<div class="ph"><h3>${o.title}</h3><small>${o.sub||''}</small></div>`);const tg=el('div','toggle');const box=el('div','scroller');
+  const seen=new Set([0]);o.modes.forEach((m,i)=>{const b=el('button','',m.name);b.setAttribute('aria-pressed',i===0?'true':'false');b.onclick=()=>{seen.add(i);[...tg.children].forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));box.innerHTML=chartSvg(m.chart);Sound.sfx('tap');};tg.appendChild(b);});
+  box.innerHTML=chartSvg(o.modes[0].chart);p.append(tg,box);if(o.legend)p.appendChild(el('div','cap',o.legend));reveal(p);return()=>seen.size===o.modes.length;}
+async function mgCrisis(o){const ph=el('div','phone');const sc=el('div','screen');ph.appendChild(sc);add(ph);
+  for(const q of o.posts){await sleep(500);sc.appendChild(el('div','post',`<b>${q[0]}</b> <small>· только что</small><div>${q[1]}</div><div class="lk">♥ ${q[2]}</div>`));reveal(ph);}
+  const tm=el('div','timer',`<span id="tsec">${o.seconds}</span><div class="tbar"><i id="tbi"></i></div>`);add(tm);
+  const box=el('div','choices');let resolve;const picked=new Promise(r=>resolve=r);
+  o.opts.forEach((op,i)=>{const b=el('button','choice',`<span class="key">${'ABCD'[i]}</span><span>${op.t}</span>`);b.onclick=()=>resolve(op);box.appendChild(b);});add(box);
+  let left=o.seconds;const iv=setInterval(()=>{left--;const e=$('#tsec');if(e)e.textContent=Math.max(0,left);const b=$('#tbi');if(b)b.style.width=Math.max(0,left/o.seconds*100)+'%';if(left<=3)Sound.sfx('tap');if(left<=0){clearInterval(iv);resolve(null);}},reduce?60:1000);
+  let op=await picked;clearInterval(iv);[...box.children].forEach(c=>c.disabled=true);
+  if(!op){await narr('Время вышло.');op=o.timeout;}else{const i=o.opts.indexOf(op);box.children[i].classList.add('picked',op.ok===true?'ok':'bad');if(op.ok!==true){const r=o.opts.findIndex(x=>x.ok===true);box.children[r].classList.add('right');}}
+  if(op.fatal){Sound.sfx('bad');await sleep(500);throw new GameOver(op.fatal);}
+  const kind=op.ok===true?'ok':'bad';const xp=score(kind,12);if(kind==='ok'){achieve('cool');if(op.flag)S.flags[op.flag]=true;}
+  apply(op.fx||{},kind==='ok'?'ok':'bad');await feedback({kind,xp,title:op.title,why:op.why,lesson:o.lesson,tag:'Кризис'});guard();return op;}
+async function mgMap(o){const p=card(`<div class="ph"><h3>${o.title}</h3><small id="dseen">открыто 0 из ${o.d.length}</small></div>`);const mw=el('div','mapWrap');const map=el('div','map');
+  map.innerHTML=`<svg viewBox="0 0 600 260" role="img" aria-label="Карта районов"><rect width="600" height="260" fill="#1a2433"/><path d="M360 0C340 70 400 120 370 260h40C440 130 380 70 400 0z" fill="#23415e"/><text x="392" y="40" font-family="Golos Text" font-size="11" fill="#6f8bab" transform="rotate(80 392 40)">${o.river}</text>${o.bridge?`<rect x="350" y="150" width="76" height="9" fill="#4a3a2a"/>${o.bridgeBroken?'<path d="M378 146l10 18" stroke="#ff6b6b" stroke-width="3"/>':''}`:''}
+    ${o.d.map((d,i)=>`<g class="d" data-i="${i}" tabindex="0" role="button" aria-label="${d.n}"><path d="${d.p}" fill="#2a3446" stroke="#0d131d" stroke-width="3" stroke-linejoin="round"/><text x="${d.lx}" y="${d.ly}" text-anchor="middle" font-family="Golos Text" font-weight="700" font-size="12.5" fill="#dfe5ee">${d.n}</text><text class="dv" x="${d.lx}" y="${d.ly+19}" text-anchor="middle" font-family="Golos Text" font-weight="900" font-size="15" fill="#ffb547">?</text></g>`).join('')}</svg>`;
+  const list=el('div','dlist');const seen=new Set();let rs;const all=new Promise(r=>rs=r);
+  const open=i=>{if(seen.has(i))return;seen.add(i);Sound.sfx('tap');const d=o.d[i];const g=map.querySelector(`.d[data-i="${i}"]`);const cl=d.v<50?'#7a2e34':d.v<70?'#6a5222':'#245a44';g.querySelector('path').setAttribute('fill',cl);g.querySelector('.dv').textContent=d.v+'%';
+    const b=list.children[i];b.classList.add(d.v<50?'low':d.v<70?'md':'hi');b.querySelector('em').textContent=d.v+'%';$('#dseen').textContent=`открыто ${seen.size} из ${o.d.length}`;if(seen.size>=o.d.length)rs();};
+  o.d.forEach((d,i)=>{const b=el('button','dbtn',`<span>${d.n}</span><em>?</em>`);b.onclick=()=>open(i);list.appendChild(b);});
+  map.querySelectorAll('.d').forEach(g=>{g.addEventListener('click',()=>open(+g.dataset.i));g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open(+g.dataset.i);}});});
+  mw.append(map,list);p.appendChild(mw);reveal(p);const sk=el('button','btn ghost','Достаточно, всё понятно');add(sk);await Promise.race([all,new Promise(r=>sk.onclick=r)]);sk.remove();}
+async function mgRice(projects){const budget=S.budget;
+  card(`<div class="ph"><h3>Как считать RICE</h3></div><div class="formula">RICE = Охват × Влияние × Уверенность ÷ Усилия</div><p class="cap">Охват — сколько жителей затронет за квартал. Влияние — от 0,5 до 3. Уверенность — насколько идея подтверждена данными. Усилия — месяцы работы.</p>`);
+  const P2=projects.map(p=>Object.assign({},p,{rice:Math.round(p.R*p.I*p.C/p.E)}));
+  const wrap=card(`<div class="budget"><div class="blabel"><span>Выбрано: <b id="bSel">0</b> млн</span><span>Доступно: ${budget} млн</span></div><div class="btrack"><div class="bfill" id="bFill"></div></div></div>`);
+  const grid=el('div','projects');const sel=new Set();const row=el('div','row');const calc=el('button','btn ghost','Посчитать RICE');const ok=el('button','btn','Утвердить бюджет');ok.disabled=true;
+  const upd=()=>{const s=[...sel].reduce((a,k)=>a+P2.find(p=>p.k===k).cost,0);$('#bSel').textContent=s;const f=$('#bFill');f.style.width=Math.min(100,budget>0?s/budget*100:100)+'%';f.classList.toggle('over',s>budget);ok.disabled=s>budget||s===0;ok.textContent=s>budget?'Не хватает бюджета':'Утвердить бюджет';};
+  P2.forEach(p=>{const c=el('button','proj',`<h4>${p.n}</h4><div class="d">${p.d}</div><div class="rice"><div><small>ОХВАТ</small><b>${p.R/1000}k</b></div><div><small>ВЛИЯНИЕ</small><b>${String(p.I).replace('.',',')}</b></div><div><small>УВЕР.</small><b>${Math.round(p.C*100)}%</b></div><div><small>УСИЛИЯ</small><b>${p.E} мес</b></div></div><div class="pfoot"><span>${p.cost} млн</span><span class="score">RICE: ?</span></div>`);
+    c.setAttribute('aria-pressed','false');c.onclick=()=>{Sound.sfx('tap');if(sel.has(p.k))sel.delete(p.k);else sel.add(p.k);c.setAttribute('aria-pressed',String(sel.has(p.k)));upd();};p.el=c;grid.appendChild(c);});
+  const show=()=>P2.forEach((p,i)=>setTimeout(()=>{const s=p.el.querySelector('.score');s.textContent='RICE: '+fmt(p.rice);s.classList.add('on');},reduce?0:i*110));
+  calc.onclick=()=>{calc.disabled=true;show();};row.append(calc,ok);wrap.append(grid,row);reveal(wrap);
+  if(budget<5){await say('dana','Денег почти нет. В этом году мы не можем запустить ни один проект.','sad');}else await new Promise(r=>ok.onclick=r);
+  ok.disabled=true;if(!calc.disabled){calc.disabled=true;show();}P2.forEach(p=>p.el.disabled=true);
+  let best=0,bm=0;const n=P2.length;for(let m=1;m<1<<n;m++){let c=0,r=0;for(let i=0;i<n;i++)if(m>>i&1){c+=P2[i].cost;r+=P2[i].rice;}if(c<=budget&&r>best){best=r;bm=m;}}
+  const optN=P2.filter((p,i)=>bm>>i&1).map(p=>'«'+p.n+'»').join(', ');const ch=P2.filter(p=>sel.has(p.k));const got=ch.reduce((a,p)=>a+p.rice,0),ratio=best?got/best:0;
+  const fx={budget:-ch.reduce((a,p)=>a+p.cost,0),pop:0,happy:0,trust:0};ch.forEach(p=>{for(const k in p.fx)fx[k]+=p.fx[k];S.flags[p.k]=true;});
+  const kind=ratio>.95?'ok':ratio>.65?'mid':'bad';const xp=score(kind,15);if(kind==='ok')achieve('rice');apply(fx,kind==='ok'?'ok':kind==='bad'?'bad':null);
+  await feedback({kind,xp,title:`План даёт ${Math.round(ratio*100)}% от максимальной ценности`,why:ratio>.95?'Лучший портфель для этого бюджета: максимум ценности за доступные деньги.':`Лучший набор в этом бюджете: ${optN}. Дорогие проекты с низкой уверенностью съедают деньги и дают мало.`,lesson:'RICE помогает сравнивать несравнимое. Недорогой проект с большим охватом и подтверждённым эффектом обычно выгоднее громкой стройки с низкой уверенностью.',tag:'Приоритеты'});guard();}
+
+/* =============== CITY (canvas) =============== */
+const city=(()=>{
+  const cv=$('#city'),ctx=cv.getContext('2d');const up=document.createElement('canvas'),uc=up.getContext('2d');
+  let W=0,H=0,DPR=1,t=0;
+  let cfg={seed:7,land:'none'};
+  let far=[],mid=[],near=[],clouds=[],stars=[],trees=[],cars=[],parts=[],smoke=[],birds=[];
+  const D={tod:.62,hk:.5,rain:0,snow:0,fog:0,clean:0,pop:1},T={tod:.62,rain:0,snow:0,fog:0};
+  let mx=0,mxs=0,pulseBad=0,pulseGood=0,fire=0,flash=0;
+  function rng(s){return()=>{s=(s*16807)%2147483647;return(s-1)/2147483646;};}
+  function hash(a,b,c){let h=(a*374761393+b*668265263+c*1013904223)|0;h=Math.imul(h^(h>>>13),1274126177);return((h^(h>>>16))>>>0)/4294967295;}
+  function build(){const r=rng(cfg.seed);far=[];mid=[];near=[];
+    let x=-.06;while(x<1.06){const w=.016+r()*.03;far.push({x,w,h:.08+r()*.15,s:r()*1e6|0});x+=w*.92;}
+    x=-.06;while(x<1.06){const w=.026+r()*.036;mid.push({x,w,h:.13+r()*.2,s:r()*1e6|0,roof:r()*5|0,g:1,o:r()});x+=w*(.78+r()*.35);}
+    x=-.05;const glassP=cfg.land==='tower'?.45:.14;while(x<1.05){const w=.04+r()*.045;near.push({x,w,h:.17+r()*.3,s:r()*1e6|0,roof:r()*5|0,g:0,o:r(),glass:r()<glassP,tone:r()*5|0});x+=w*(1+r()*.55);}
+    clouds=Array.from({length:8},()=>({x:r(),y:.06+r()*.26,s:.6+r()*.9,v:.000012+r()*.00002,k:r()}));
+    stars=Array.from({length:150},()=>({x:r(),y:r()*.55,s:r()*1.2+.3,p:r()*6}));
+    trees=Array.from({length:46},()=>({x:r()*1.04-.02,s:.7+r()*.6,k:r()}));
+    birds=Array.from({length:6},()=>({x:r(),y:.12+r()*.18,p:r()*6,v:.00025+r()*.0002}));}
+  function resize(){DPR=Math.min(isMobile()?1.6:1.5,devicePixelRatio||1);W=cv.clientWidth;H=cv.clientHeight;cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);up.width=cv.width;up.height=cv.height;ctx.setTransform(DPR,0,0,DPR,0,0);uc.setTransform(DPR,0,0,DPR,0,0);}
+  addEventListener('resize',resize);
+  addEventListener('pointermove',e=>{if(e.pointerType==='mouse')mx=(e.clientX/innerWidth-.5)*2;});
+  const SKY=[[0,'#070b18','#141c34'],[.2,'#1c2a52','#c97b63'],[.28,'#4a78b8','#f2c49b'],[.4,'#3f82cf','#b9d9f2'],[.55,'#3a7cc9','#c6e0f4'],[.66,'#4a78b8','#f0cf9e'],[.75,'#2c3566','#e6835a'],[.83,'#121a3a','#4a3552'],[1,'#070b18','#141c34']];
+  function skyAt(v){for(let i=0;i<SKY.length-1;i++){const a=SKY[i],b=SKY[i+1];if(v>=a[0]&&v<=b[0]){const k=(v-a[0])/(b[0]-a[0]);return[hexMix(a[1],b[1],k),hexMix(a[2],b[2],k)];}}return[SKY[0][1],SKY[0][2]];}
+  const TONES=['#8d8274','#6e7681','#8f705c','#64707e','#9a8f80'];
+  function gyOf(){return H*(isMobile()?.8:.79);}
+  function drawB(c,b,layer,px,gy,L,N,hk,haze){
+    const vis=layer==='far'?1:b.g;if(vis<.01)return;const e=vis<1?1-Math.pow(1-vis,3):1;
+    const w=b.w*W,h=b.h*H*e*(layer==='near'?1:1),x=b.x*W+px,y=gy-h;
+    let base;if(layer==='far')base=hexMix(hexMix('#141a2a','#7d8fa6',L),haze,.55);else if(layer==='mid')base=hexMix(hexMix('#121826','#5f6f86',L),haze,.22);
+    else base=b.glass?hexMix('#0e1626','#5c86b0',L):hexMix(hexMix('#0d121c',TONES[b.tone],L),haze,.06);
+    base=hexMix(base,'#7a7a7a',(1-hk)*.25*L);
+    const g=c.createLinearGradient(0,y,0,gy);g.addColorStop(0,shade(base,.08));g.addColorStop(1,shade(base,-.18));c.fillStyle=g;c.fillRect(x,y,w,h);
+    if(layer!=='far'){const sideL=D.tod>.5;c.fillStyle='rgba(0,0,0,'+(.14+.12*L)+')';c.fillRect(sideL?x:x+w*.78,y,w*.22,h);
+      c.fillStyle='rgba(255,255,255,'+(.05*L)+')';c.fillRect(x,y,w,1.5);}
+    if(b.glass&&layer==='near'){const gg=c.createLinearGradient(x,y,x+w,gy);gg.addColorStop(0,'rgba(255,255,255,'+(.18*L)+')');gg.addColorStop(.5,'rgba(255,255,255,0)');gg.addColorStop(1,'rgba(255,255,255,'+(.08*L)+')');c.fillStyle=gg;c.fillRect(x,y,w,h);}
+    if(layer!=='far'&&e>.9){const roofC=shade(base,-.1);
+      if(b.roof===1){c.fillStyle=roofC;c.fillRect(x+w*.62,y-h*.08-6,1.6,h*.08+6);if(N>.3&&Math.sin(t*2.5+b.s)>0){c.fillStyle='#ff4040';c.beginPath();c.arc(x+w*.62+.8,y-h*.08-7,1.8,0,7);c.fill();}}
+      if(b.roof===2&&layer==='near'){c.fillStyle=roofC;c.fillRect(x+w*.15,y-9,w*.22,9);c.fillRect(x+w*.17,y-13,w*.18,4);}
+      if(b.roof===3){c.fillStyle=shade(base,.02);c.fillRect(x+w*.2,y-h*.1,w*.6,h*.1+1);}
+      if(b.roof===4&&layer==='near'){c.fillStyle=roofC;c.beginPath();c.moveTo(x,y);c.lineTo(x+w*.5,y-w*.28);c.lineTo(x+w,y);c.fill();}}
+    if(layer==='far'){if(N>.2){const n=Math.floor(w*h/90);for(let i=0;i<n;i++){const hv=hash(b.s,i,1);if(hv>.3*N)continue;c.fillStyle='rgba(255,210,140,'+(.5*N)+')';c.fillRect(x+hash(b.s,i,2)*w,y+hash(b.s,i,3)*h,1.2,1.2);}}return;}
+    const near_=layer==='near',cw=near_?8.5:6.5,rh=near_?11:8.5,ww=near_?4.2:3,wh=near_?5.5:3.8;
+    const cols=Math.max(1,Math.floor((w-6)/cw)),rows=Math.max(0,Math.floor((h-10)/rh)),ox=x+(w-cols*cw)/2+(cw-ww)/2;
+    const litP=(.14+.52*hk)*N,boardP=Math.max(0,.5-hk)*.5;
+    for(let cc=0;cc<cols;cc++)for(let rr=0;rr<rows;rr++){const hv=hash(b.s,cc,rr),wx=ox+cc*cw,wy=y+7+rr*rh;
+      if(hash(b.s,cc+50,rr)<boardP){c.fillStyle=L>.4?'#5a4636':'#14100c';c.fillRect(wx,wy,ww,wh);continue;}
+      if(N>.5&&hv<litP){c.fillStyle=hv<litP*.3?'#ffe2a8':hv<litP*.7?'#ffcf7a':'#ffb35c';c.fillRect(wx,wy,ww,wh);}
+      else if(L>.35){const sk=b.glass?'rgba(190,220,245,':'rgba(170,198,225,';c.fillStyle=sk+(.18+hv*.45)*L+')';c.fillRect(wx,wy,ww,wh);}
+      else{c.fillStyle='rgba(8,12,20,.6)';c.fillRect(wx,wy,ww,wh);}}}
+  function landmark(c,gy,px,L,N){const F=S?S.flags:{};
+    if(cfg.land==='factory'){const x=W*.12+px;c.fillStyle=hexMix('#1a1f28','#5d646c',L);c.fillRect(x,gy-H*.16,W*.16,H*.16);
+      [[.02,.36],[.06,.42],[.11,.33]].forEach((s,i)=>{const sx=x+W*s[0],sh=H*s[1];c.fillStyle=hexMix('#20252e','#6a7078',L);c.fillRect(sx,gy-sh,W*.012,sh);c.fillStyle='#b0453a';c.fillRect(sx,gy-sh+H*.02,W*.012,H*.012);
+        const amt=F.filters?0.12:F.nightStop?.5:1;if(Math.random()<.35*amt)smoke.push({x:sx+W*.006,y:gy-sh,vx:(.2+Math.random()*.3),vy:-(.25+Math.random()*.25),r:4+Math.random()*4,l:1});});
+      if(N>.4){c.fillStyle='rgba(255,140,60,.18)';c.fillRect(x,gy-H*.16,W*.16,H*.16);}}
+    if(cfg.land==='port'||cfg.land==='factory'){const bx=W*.86+px*1.2;for(let k=0;k<2;k++){const x=bx+k*W*.06,hgt=H*.28;c.strokeStyle=hexMix('#1a1f28','#c05a3a',L*.7);c.lineWidth=2.2;c.beginPath();c.moveTo(x,gy);c.lineTo(x,gy-hgt);c.lineTo(x-W*.05,gy-hgt*.9);c.moveTo(x,gy-hgt);c.lineTo(x+W*.025,gy-hgt*.92);c.moveTo(x-W*.04,gy-hgt*.9);c.lineTo(x-W*.04,gy-hgt*.6);c.stroke();}}
+    if(cfg.land==='tower'){const x=W*.5+px*.6,hh=H*.62;c.fillStyle=hexMix('#151b28','#8a96a6',L);c.beginPath();c.moveTo(x-W*.008,gy);c.lineTo(x-W*.003,gy-hh);c.lineTo(x+W*.003,gy-hh);c.lineTo(x+W*.008,gy);c.fill();
+      c.beginPath();c.ellipse(x,gy-hh*.72,W*.018,H*.018,0,0,7);c.fill();c.fillStyle=N>.4?'rgba(255,214,140,.9)':'rgba(180,210,240,.6)';c.fillRect(x-W*.014,gy-hh*.725,W*.028,2);
+      c.fillStyle=hexMix('#151b28','#8a96a6',L);c.fillRect(x-1,gy-hh-H*.06,2,H*.06);if(Math.sin(t*2)>0){c.fillStyle='#ff4040';c.beginPath();c.arc(x,gy-hh-H*.06,2.6,0,7);c.fill();c.fillStyle='rgba(255,64,64,.25)';c.beginPath();c.arc(x,gy-hh-H*.06,9,0,7);c.fill();}}
+    if(F.wheel){const R=H*.13,cx=W*.7+px,cy=gy-R-H*.02;c.strokeStyle=hexMix('#2a2f3a','#e8e3d8',L);c.lineWidth=2;c.beginPath();c.arc(cx,cy,R,0,7);c.stroke();c.beginPath();c.moveTo(cx,cy);c.lineTo(cx-R*.5,gy);c.moveTo(cx,cy);c.lineTo(cx+R*.5,gy);c.stroke();
+      const a0=F.wheelRent?t*.08:t*.03;for(let i=0;i<12;i++){const a=a0+i*Math.PI/6,X=cx+Math.cos(a)*R,Y=cy+Math.sin(a)*R;c.lineWidth=1;c.beginPath();c.moveTo(cx,cy);c.lineTo(X,Y);c.stroke();c.fillStyle=N>.5?(i%2?'#ffcf7a':'#ff7b9a'):'#d8d2c4';c.fillRect(X-2.5,Y,5,4);}}
+    if(F.it){const x=W*.42+px,w=W*.05,hh=H*.5;const g=c.createLinearGradient(x,0,x+w,0);g.addColorStop(0,hexMix('#0e2030','#4d8fae',L));g.addColorStop(1,hexMix('#0a1822','#2f6584',L));c.fillStyle=g;c.fillRect(x,gy-hh,w,hh);
+      for(let y=gy-hh+6;y<gy-4;y+=7){c.fillStyle=N>.4?'rgba(110,220,230,.5)':'rgba(255,255,255,.12)';c.fillRect(x+3,y,w-6,2);}}}
+  function cloudDraw(c,x,y,s,col,a){for(let i=0;i<6;i++){const ox=(i-2.5)*22*s,oy=Math.sin(i*1.7)*6*s,r=(26-Math.abs(i-2.5)*4)*s;const g=c.createRadialGradient(x+ox,y+oy,0,x+ox,y+oy,r);g.addColorStop(0,`rgba(${col},${a})`);g.addColorStop(1,`rgba(${col},0)`);c.fillStyle=g;c.beginPath();c.arc(x+ox,y+oy,r,0,7);c.fill();}}
+  function frame(){
+    t+=1/60;mxs+=(mx-mxs)*.04;
+    for(const k of['tod','rain','snow','fog'])D[k]+=(T[k]-D[k])*.02;
+    if(S){D.hk+=(clamp((S.happy-20)/60,0,1)-D.hk)*.03;D.pop+=(S.pop/S.pop0-D.pop)*.03;D.clean+=(((S.flags.cleanRiver?1:0)+(S.flags.filters?.6:0)+(S.flags.nightStop?.3:0))/1.9-D.clean)*.01;}
+    const L=clamp(Math.sin((D.tod-.19)/.66*Math.PI),0,1),N=1-clamp(L*1.6,0,1),hk=D.hk;
+    const gy=gyOf(),wy=gy+H*.035;
+    const gloom=clamp(D.rain*.8+pulseBad*.5+(1-hk)*.25,0,1);
+    let [top,bot]=skyAt(D.tod);top=hexMix(top,'#4a5260',gloom*.45*L+gloom*.2);bot=hexMix(bot,'#7d8590',gloom*.45*L);
+    const c=uc;const g=c.createLinearGradient(0,0,0,gy);g.addColorStop(0,top);g.addColorStop(1,bot);c.fillStyle=g;c.fillRect(0,0,W,H);
+    if(N>.05){stars.forEach(s=>{c.fillStyle=`rgba(255,255,255,${N*(.35+.45*Math.sin(t*1.3+s.p))*(1-gloom)})`;c.fillRect(s.x*W,s.y*gy,s.s,s.s);});}
+    const sa=(D.tod-.19)/.66;if(sa>-.05&&sa<1.05){const sx=W*(.08+.84*sa)-mxs*4,sy=gy-Math.sin(clamp(sa,0,1)*Math.PI)*gy*.78+gy*.06;const sg=c.createRadialGradient(sx,sy,0,sx,sy,90);sg.addColorStop(0,`rgba(255,236,190,${.85*(1-gloom*.7)})`);sg.addColorStop(.12,`rgba(255,210,140,${.35*(1-gloom*.7)})`);sg.addColorStop(1,'rgba(255,190,120,0)');c.fillStyle=sg;c.fillRect(sx-90,sy-90,180,180);c.fillStyle=`rgba(255,246,220,${1-gloom*.6})`;c.beginPath();c.arc(sx,sy,9,0,7);c.fill();}
+    else{const mxp=W*.78,myp=gy*.22;c.fillStyle=`rgba(235,238,245,${.9*N*(1-gloom*.6)})`;c.beginPath();c.arc(mxp,myp,12,0,7);c.fill();c.fillStyle=top;c.beginPath();c.arc(mxp+5,myp-3,10.5,0,7);c.fill();}
+    clouds.forEach(cl=>{cl.x+=cl.v;if(cl.x>1.2)cl.x=-.2;const col=L>.3?(gloom>.4?'150,156,166':'255,255,255'):'90,96,120';cloudDraw(c,cl.x*W-mxs*6,cl.y*gy,cl.s*Math.max(.6,W/1400),col,(.22+.3*gloom)*(.5+L*.5));});
+    if(hk>.45&&L>.3)birds.forEach(b=>{b.x+=b.v;if(b.x>1.1)b.x=-.1;const bx=b.x*W,by=b.y*gy+Math.sin(t*2+b.p)*4,f=Math.sin(t*9+b.p)*2.5;c.strokeStyle='rgba(30,35,45,.7)';c.lineWidth=1.3;c.beginPath();c.moveTo(bx-5,by-f);c.quadraticCurveTo(bx-2,by-3,bx,by);c.quadraticCurveTo(bx+2,by-3,bx+5,by-f);c.stroke();});
+    const haze=bot;
+    c.fillStyle=hexMix(hexMix('#141a2c','#8597ae',L),haze,.6);c.beginPath();c.moveTo(0,gy);for(let x=0;x<=W+20;x+=20){const yy=gy-H*.2-Math.sin(x*.004+cfg.seed)*H*.05-Math.sin(x*.011)*H*.02;c.lineTo(x-mxs*3,yy);}c.lineTo(W,gy);c.fill();
+    const pf=-mxs*6,pm=-mxs*14,pn=-mxs*26;
+    far.forEach(b=>drawB(c,b,'far',pf,gy,L,N,hk,haze));
+    const vm=clamp(.7+(D.pop-1)*5,.35,1),vn=clamp(.62+(D.pop-1)*6,.3,1);
+    mid.forEach(b=>{b.g+=((b.o<vm?1:0)-b.g)*.03;});near.forEach(b=>{b.g+=((b.o<vn?1:0)-b.g)*.03;});
+    landmark(c,gy,pm,L,N);
+    mid.forEach(b=>drawB(c,b,'mid',pm,gy,L,N,hk,haze));
+    near.forEach(b=>drawB(c,b,'near',pn,gy,L,N,hk,haze));
+    smoke=smoke.filter(p=>p.l>0);smoke.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.r+=.12;p.l-=.004;const col=L>.3?'120,118,110':'60,58,56';c.fillStyle=`rgba(${col},${p.l*.35})`;c.beginPath();c.arc(p.x,p.y,p.r,0,7);c.fill();});
+    if(smoke.length>260)smoke.splice(0,smoke.length-260);
+    const F=S?S.flags:{};const tn=(F.yards||F.park?46:22);
+    for(let i=0;i<tn;i++){const tr=trees[i];const x=tr.x*W+pn*1.1,s=H*.022*tr.s;c.fillStyle=hexMix(hexMix('#0b1410','#3d6b45',L),'#6a6a5a',(1-hk)*.3*L);c.beginPath();c.ellipse(x,gy-s*.9,s*.75,s*1.05,0,0,7);c.fill();c.fillStyle='rgba(0,0,0,.25)';c.fillRect(x-1,gy-s*.2,2,s*.2+1);}
+    c.fillStyle=hexMix('#151820','#5a5e66',L);c.fillRect(0,gy,W,H*.035);
+    c.fillStyle=`rgba(255,220,120,${.35+.3*L})`;for(let x=-((t*28)%40);x<W;x+=40)c.fillRect(x,gy+H*.017,16,1.4);
+    if(F.bikes){c.fillStyle='rgba(90,209,154,.6)';c.fillRect(0,gy+H*.032,W,1.6);}
+    if(N>.25)for(let x=30+(pn%120);x<W;x+=120){c.fillStyle='rgba(30,30,36,.9)';c.fillRect(x,gy-H*.05,1.6,H*.05);const lg=c.createRadialGradient(x,gy-H*.05,0,x,gy-H*.05,40);lg.addColorStop(0,`rgba(255,200,120,${.45*N})`);lg.addColorStop(1,'rgba(255,200,120,0)');c.fillStyle=lg;c.fillRect(x-40,gy-H*.05-40,80,80);}
+    if(Math.random()<(F.buses||F.buses2?.04:.025)&&cars.length<16){const dir=Math.random()<.5?1:-1;const bus=(F.buses||F.buses2)&&Math.random()<.3;cars.push({x:dir>0?-40:W+40,dir,bus,len:bus?W*.03+16:W*.012+9,v:(bus?.7:1+Math.random()*.9)*dir,c:['#c8ccd2','#2d3a52','#7a1f24','#e6e2d8','#3c4a3a','#1f2328'][Math.random()*6|0]});}
+    cars=cars.filter(k=>k.x>-80&&k.x<W+80);cars.forEach(k=>{k.x+=k.v;const ly=k.dir>0?gy+H*.024:gy+H*.008,hh=H*.009+3;
+      c.fillStyle=k.bus?(L>.3?'#d9a72a':'#6a5216'):hexMix('#0c0e12',k.c,L*.9+.1);c.fillRect(k.x,ly-hh,k.len,hh);if(!k.bus){c.fillRect(k.x+k.len*.2,ly-hh*1.6,k.len*.55,hh*.7);}
+      if(k.bus&&N>.3){c.fillStyle='rgba(255,230,170,.8)';for(let q=4;q<k.len-4;q+=6)c.fillRect(k.x+q,ly-hh+2,3,2);}
+      if(N>.3){const hx=k.dir>0?k.x+k.len:k.x;const hg=c.createRadialGradient(hx,ly-hh/2,0,hx,ly-hh/2,26);hg.addColorStop(0,'rgba(255,240,200,.55)');hg.addColorStop(1,'rgba(255,240,200,0)');c.fillStyle=hg;c.fillRect(hx-26,ly-hh/2-26,52,52);
+        c.fillStyle='rgba(255,40,40,.85)';c.fillRect(k.dir>0?k.x:k.x+k.len-2,ly-hh*.7,2,2);}});
+    c.fillStyle=hexMix('#1a1c22','#8a8678',L);c.fillRect(0,wy-H*.008,W,H*.008);
+    if(fire>0){fire-=1/60;if(Math.random()<.07)burst(Math.random()*W*(isMobile()?1:.6),gy*(.15+Math.random()*.35));}
+    parts=parts.filter(p=>p.l>0);parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=p.gr;p.l-=p.d;c.fillStyle=`rgba(${p.c},${clamp(p.l,0,1)})`;c.beginPath();c.arc(p.x,p.y,p.r,0,7);c.fill();});
+    // compose
+    ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(up,0,0);ctx.setTransform(DPR,0,0,DPR,0,0);
+    const wh=H-wy;let wc=cfg.land==='factory'?hexMix(hexMix('#2c3424','#4e5c3a',L),hexMix('#0c1a2a','#2d5f80',L),D.clean):hexMix('#0a1426','#2c5878',L);
+    ctx.fillStyle=wc;ctx.fillRect(0,wy,W,wh);
+    const sh=Math.max(2,Math.round(2*DPR));for(let yy=0;yy<wh;yy+=2){const srcY=(wy-yy*1.15)*DPR;if(srcY<0)break;const off=Math.sin(yy*.35+t*2.2)*(1+yy*.04);ctx.globalAlpha=(.42-.3*yy/wh)*(.6+.4*N);
+      ctx.drawImage(up,0,srcY,up.width,sh,off,wy+yy,W,2);}ctx.globalAlpha=1;
+    const wg=ctx.createLinearGradient(0,wy,0,H);wg.addColorStop(0,'rgba(0,0,0,0)');wg.addColorStop(1,'rgba(0,0,0,.45)');ctx.fillStyle=wg;ctx.fillRect(0,wy,W,wh);
+    if(D.fog>.02){const fg=ctx.createLinearGradient(0,gy-H*.3,0,gy+H*.05);fg.addColorStop(0,'rgba(200,205,212,0)');fg.addColorStop(1,`rgba(200,205,212,${D.fog*.55})`);ctx.fillStyle=fg;ctx.fillRect(0,gy-H*.3,W,H*.35);}
+    const rain=clamp(D.rain+pulseBad,0,1);if(rain>.03){ctx.strokeStyle=`rgba(180,195,215,${.35*rain})`;ctx.lineWidth=1;ctx.beginPath();const n=Math.floor(160*rain);for(let i=0;i<n;i++){const x=(i*73.7+t*380)%W,y=(i*131.3+t*900)%H;ctx.moveTo(x,y);ctx.lineTo(x-4,y+14);}ctx.stroke();}
+    if(D.snow>.03){ctx.fillStyle=`rgba(255,255,255,${.8*D.snow})`;const n=Math.floor(140*D.snow);for(let i=0;i<n;i++){const x=((i*97.1+t*14+Math.sin(t+i)*14)%W+W)%W,y=(i*53.7+t*36)%H;ctx.beginPath();ctx.arc(x,y,1+(i%3)*.5,0,7);ctx.fill();}}
+    if(pulseGood>0){const a=pulseGood*.18;const gg=ctx.createRadialGradient(W*.35,gy,0,W*.35,gy,W*.6);gg.addColorStop(0,`rgba(255,200,120,${a})`);gg.addColorStop(1,'rgba(255,200,120,0)');ctx.fillStyle=gg;ctx.fillRect(0,0,W,H);pulseGood-=.012;}
+    if(pulseBad>0)pulseBad-=.006;
+    if(flash>0){ctx.fillStyle=`rgba(255,255,255,${flash})`;ctx.fillRect(0,0,W,H);flash-=.04;}
+    const vg=ctx.createRadialGradient(W*.5,H*.5,Math.min(W,H)*.3,W*.5,H*.5,Math.max(W,H)*.75);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.45)');ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
+    if(!reduce)requestAnimationFrame(frame);else setTimeout(()=>requestAnimationFrame(frame),400);}
+  function burst(x,y){const cols=['255,200,120','255,120,150','120,220,200','160,190,255'];const col=cols[Math.random()*4|0];for(let i=0;i<60;i++){const a=Math.random()*7,s=1+Math.random()*2.6;parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,gr:.025,l:1.3,d:.012,r:1.6,c:col});}}
+  function sparkles(n){const gy=gyOf();for(let i=0;i<n;i++)parts.push({x:Math.random()*W*(isMobile()?1:.62),y:gy-Math.random()*H*.3,vx:(Math.random()-.5)*.3,vy:-(.4+Math.random()*.8),gr:-.002,l:1,d:.008,r:1.4+Math.random()*1.4,c:'255,214,140'});}
+  build();resize();requestAnimationFrame(frame);
+  return{setup(c){cfg=c;build();smoke=[];D.clean=0;},sky(tod,wx){T.tod=tod;T.rain=wx.rain||0;T.snow=wx.snow||0;T.fog=wx.fog||0;},
+    good(big){pulseGood=1;sparkles(big?70:35);},bad(){pulseBad=1;},fireworks(s){fire=s;},flash(){flash=.6;},jump(tod){D.tod=T.tod=tod;}};
+})();
+
+/* =============== SCENARIOS =============== */
+const SCEN={};
+SCEN.A={id:'A',title:'Город, который уезжает',city:'Инсайтград',short:'транспортный кризис',pop:48000,happy:52,budget:100,paper:'Вестник Инсайтграда',level:'Средняя сложность',
+  desc:'Из города уезжают семьи и молодёжь. Разберитесь, почему, и остановите отток.',officeSky:['#e6a26e','#6a7fa8'],chartLabel:'НАСЕЛЕНИЕ ↓',city3:{seed:11,land:'none'},
+  tags:['Проблема','Метрики','Интервью','Цифры','Гипотеза','Эксперимент','Последствия','Ловушки','Приоритеты','Кризис','Сегменты'],
+  districts:['Центр','Северный','Заводской','Новый квартал','Заречье'],special:'zarechie',chapters:[]};
+SCEN.B={id:'B',title:'Река и комбинат',city:'Порт-Северный',short:'экология и рабочие места',pop:61000,happy:48,budget:120,paper:'Северный курьер',level:'Высокая сложность',
+  desc:'Мёртвая рыба в реке, астма у детей и комбинат, где работают 6 000 человек. Найдите баланс.',officeSky:['#9fb2c2','#5a6a7a'],chartLabel:'АСТМА У ДЕТЕЙ ↑',city3:{seed:23,land:'factory'},
+  tags:['Кризис','Нормировка','Источники','Переговоры','Эксперимент','Кризис','Приоритеты','Метрики'],
+  districts:['Центр','Заводской','Порт','Сосновый','Нижняя набережная'],special:'floodOk',chapters:[]};
+SCEN.C={id:'C',title:'Цифровая мэрия',city:'Новоград',short:'запуск городского приложения',pop:85000,happy:55,budget:80,paper:'Новоград.Онлайн',level:'Высокая сложность',
+  desc:'Очереди в МФЦ по 2,5 часа. Запустите городское приложение и не потеряйте тех, кому оно не подходит.',officeSky:['#7fb0e0','#3a5a8a'],chartLabel:'ОЧЕРЕДЬ, МИН ↑',city3:{seed:37,land:'tower'},
+  tags:['MVP','Метрики','Онбординг','Эксперимент','Когорты','Сегменты','Кризис','Цены','Приоритеты'],
+  districts:['Центр','Технопарк','Спальный','Университетский','Старый город'],special:'mfcOk',chapters:[]};
+Object.values(SCEN).forEach(c=>c.tagOf=i=>c.tags[i]||'Решение');
+
+/* ---------- SCENARIO A ---------- */
+SCEN.A.chapters=[
+async()=>{head('Первый день в кабинете',1,.62);add(el('div','',sceneOffice()));
+  await narr('Мэр {name}, добро пожаловать в Инсайтград. За год город покинули 4 300 человек — почти каждый десятый. Окна пустых квартир заколачивают досками.');
+  await say('gromov','Тут думать нечего. Ставим колесо обозрения на набережной за 40 миллионов. В соседнем Камышине поставили — народ повалил. Я этот город 25 лет чувствую.','happy');
+  await say('dana','Я бы сначала разобралась, почему люди уезжают. Колесо может решить совсем не ту проблему.');
+  await quiz([
+    {t:'Строим колесо: это быстрая видимая победа, жители увидят, что мэрия работает',ok:false,flag:'wheel',fx:{budget:-40,trust:-6,pop:-600,happy:1},react:['gromov','Вот это мэр! Через год скажете мне спасибо.','happy'],title:'Видимая победа — не значит нужная',why:'Колесо построят через 8 месяцев. Пока оно строится, люди продолжают уезжать: их проблема не в развлечениях. А в бюджете стало на 40 млн меньше.',lesson:'HiPPO — решение по мнению самого высокопоставленного в комнате. Опыт — хороший источник гипотез, но гипотезы нужно проверять.'},
+    {t:'Повторяем стратегию Камышина целиком: у них население растёт третий год',ok:false,fx:{trust:-3,budget:-10},title:'Чужой успех — не ваш рецепт',why:'Дана выяснила: Камышин растёт, потому что рядом открылся логистический хаб на 5 000 рабочих мест. Колесо там ни при чём. 10 млн на консультантов ушли впустую.',lesson:'Копируя чужое решение, проверь, что у тебя та же проблема и тот же контекст. Иначе ты копируешь совпадение.'},
+    {t:'Объявляем конкурс идей среди жителей и строим победителя',ok:'mid',flag:'poll',fx:{trust:2},title:'Много идей, мало понимания',why:'Пришло 3 000 идей: метро, аквапарк, «Икея». Люди хорошо чувствуют боль, но плохо придумывают решения.',lesson:'Спрашивай о проблемах и поведении («что вам мешает?»), а не о решениях («что построить?»).'},
+    {t:'Сначала выясняем, почему люди уезжают, и только потом выбираем решение',ok:true,fx:{trust:6},react:['gromov','Данные, данные... Город — не таблица. Ну, посмотрим.','angry'],title:'Сначала проблема, потом решение',why:'Команда видит мэра, который проверяет идеи. Громов недоволен, но его идею можно будет проверить наравне с другими.',lesson:'Начинай с проблемы, а не с решения. Пойми, что происходит и почему, — потом выбирай, что строить.'}
+  ],{ach:'skeptic'});
+  await say('dana','У меня бюджет на одно исследование в этом месяце. Что запросим?');
+  await quiz([
+    {t:'Опрос 5 000 жителей: «Что вам нравится в городе и что улучшить?»',ok:false,title:'Опросили не тех',why:'Вы опросили тех, кто остался. Они довольнее среднего — иначе бы уехали. Главный вопрос — почему уезжают — остался без ответа.',lesson:'Ошибка выжившего: изучая только тех, кто остался, не узнаешь, почему ушли другие.'},
+    {t:'Данные миграционного учёта (кто уехал: возраст, район) и короткий опрос уехавших',ok:true,title:'В точку',why:'Видно, кто именно уезжает: семьи с детьми и молодёжь из спальных районов. И у них можно спросить почему.',lesson:'Ошибка выжившего: отток объясняют ушедшие, а не оставшиеся. Изучай тех, кто ушёл.'},
+    {t:'Фокус-группа с депутатами горсовета',ok:false,title:'Мнения вместо данных',why:'Депутаты рассказали, что жители хотят новый стадион. Это их гипотеза, а не факт.'}
+  ],{ach:'survivor',hint:'Чтобы понять, почему уходят, нужен кто-то, кто уже ушёл.'});
+  if(S.flags.wheel)await newspaper('Мэр обещает колесо обозрения. Горожане спрашивают про автобусы','Советник Громов назвал проект «главной стройкой десятилетия». На остановках по-прежнему ждут 22-й по сорок минут.');
+  else await newspaper('Новый мэр заперся с аналитиками','«Раньше решения принимались за пять минут», — жалуется советник Громов. В мэрии говорят, что ищут причины оттока жителей.');},
+async()=>{head('Полярная звезда',2,.5);
+  await say('dana','Нам нужна одна главная метрика — North Star. По ней будем судить, стало ли городу лучше. Выбирайте внимательно: все варианты звучат разумно.');
+  await quiz([
+    {t:'Чистая миграция за год: сколько приехало минус сколько уехало',ok:'mid',title:'Хороший итог, но запаздывает',why:'Миграцию видно раз в год, и она зависит от внешних причин — например, от рынка труда в регионе. По ней нельзя понять, сработало ли решение этого месяца.',lesson:'Главная метрика должна быстро реагировать на ваши действия. Запаздывающие итоги — для годового отчёта, опережающие — для ежедневных решений.'},
+    {t:'Доля жителей, которые живут в городе дольше года и готовы советовать его знакомым',ok:true,title:'Точно в цель',why:'Метрика отражает ценность для людей, меряется ежеквартальным опросом и предсказывает отток. Сейчас она 61%.',lesson:'North Star отражает ценность для пользователя, реагирует на ваши решения и предсказывает долгосрочный успех.'},
+    {t:'Число новых объектов инфраструктуры',ok:false,title:'Это метрика активности',why:'Построить можно и то, что никому не нужно. Метрика растёт, даже когда городу становится хуже.'},
+    {t:'Число обращений жителей в мэрию',ok:false,title:'Растёт в обе стороны',why:'Обращений больше и когда всё плохо (жалобы), и когда хорошо (вовлечённость). По такой метрике нельзя понять, в какую сторону вы движетесь.'}
+  ],{ach:'star',hint:'Ищите метрику, которая про пользу для людей, быстро реагирует на решения и связана с оттоком.'});
+  await say('gromov','А мне на планёрке принесли шесть отличных метрик. Все растут! Найдите, мэр, какие из них пустышки — если сможете.','happy');
+  await mgChips({title:'Найдите метрики тщеславия',sub:'отметьте все пустышки',yes:'Пустышка',no:'Полезная',items:[{t:'Просмотры ролика о городе',v:true},{t:'Среднее время в пути до работы',v:false},{t:'Число перерезанных ленточек',v:true},{t:'Доля уехавших за квартал',v:false},{t:'Лайки под постами мэра',v:true},{t:'Доля пустующих квартир',v:false},{t:'Охват пресс-релизов',v:true}],
+    why:'Пустышки растут от пиара и активности мэрии. Полезные метрики меняются от решений и отражают жизнь людей. Пунктиром обведены ошибки.',lesson:'Метрика тщеславия радует в отчёте, но не помогает решать. Спроси себя: «Что я сделаю по-другому, если эта цифра упадёт?»'});
+  await say('timur','Предлагаю премировать водителей за число выполненных рейсов в день. Больше рейсов — меньше ждать. Логично?');
+  await quiz([
+    {t:'Логично, вводим премию с первого числа',ok:false,flag:'goodhart',fx:{trust:-2},title:'Цифра выросла, людям хуже',why:'Через месяц водители начали проезжать остановки без пассажиров и срезать маршрут. Рейсов стало на 12% больше, а ждать люди стали дольше.',lesson:'Закон Гудхарта: когда метрика становится целью, она перестаёт быть хорошей метрикой. Привязывай стимулы к тому, что важно человеку.'},
+    {t:'Водители начнут пропускать остановки, чтобы успеть больше. Премировать лучше за соблюдение интервала и точность прибытия',ok:true,title:'Вы предвидели Гудхарта',why:'Тимур переписал положение о премии: учитывается отклонение от интервала по данным GPS. Водителям сложнее «накрутить» результат.',lesson:'Закон Гудхарта: когда метрика становится целью, её начинают «накручивать». Стимул должен быть привязан к результату для пользователя.'},
+    {t:'Премия сработает, только сумму надо поднять вдвое',ok:false,title:'Дело не в сумме',why:'Чем больше премия за рейсы, тем сильнее соблазн срезать маршрут. Проблема в самой метрике.'}
+  ],{ach:'goodhart'});},
+async()=>{head('Выход в поле',3,.4);
+  await say('dana','Прежде чем смотреть таблицы, поговорим с людьми. У подъезда нас ждут трое жителей. Времени мало: выберите 3 вопроса из 6.','happy');
+  await mgInterview({people:['vera','artem','aigul'],qs:[
+    {t:'Расскажите, как прошёл ваш вчерашний день — от выхода из дома до вечера?',g:'g',note:'про реальное поведение',a:['Час ждала 22-й, опоздала к врачу. Обратно шла пешком.','До колледжа ждать 40 минут, так что езжу на самокате. Зимой — никак.','Садик в 8, работа в 9. Автобус непредсказуемый, вожу детей на такси — 600 рублей в день.']},
+    {t:'Вам бы понравилось колесо обозрения на набережной?',g:'b',note:'наводящий вопрос',a:['Ну... наверное, красиво.','Прикольно, наверное.','Детям понравится. Наверное.']},
+    {t:'Что вас больше всего раздражает в городе?',g:'g',note:'про боль',a:['Автобусы. И расписание на остановке прошлогоднее.','Транспорт. И вечером во дворах темно.','Транспорт. И дворы — детям негде гулять.']},
+    {t:'Вы же любите наш город, правда?',g:'b',note:'ответ подсказан',a:['Конечно, всю жизнь здесь.','Ну да.','Конечно!']},
+    {t:'Когда вы последний раз всерьёз думали о переезде? Что тогда случилось?',g:'g',note:'конкретный случай',a:['Месяц назад, когда пропустила приём из-за автобуса. Дочка зовёт к себе.','Каждый раз, когда опаздываю на пары. Друзья уже уехали.','Когда младший заболел, а мы час добирались до поликлиники. Муж ищет работу в другом городе.']},
+    {t:'Сколько бы вы платили за проезд, если бы автобусы стали лучше?',g:'m',note:'гипотетический вопрос',a:['Ну... рублей 50? Не знаю.','Столько же, сколько сейчас.','Смотря насколько лучше.']}],
+    why:'Лучшие вопросы — открытые и про прошлый опыт: «расскажите, как было». Наводящие и гипотетические вопросы дают вежливые, но бесполезные ответы.',lesson:'На интервью спрашивай про реальный опыт и конкретные случаи. Люди плохо предсказывают своё поведение, но хорошо помнят, что их бесило вчера.'});
+  await say('timur','Все трое говорят про автобусы. Может, сразу закупим 40 новых машин?');
+  await quiz([
+    {t:'Да: три из трёх — это 100%, сигнал однозначный',ok:false,title:'Три человека — не выборка',why:'Интервью дают гипотезу и понимание причин, но не масштаб. Трое жителей могли случайно оказаться с одной окраины.',lesson:'Качественные исследования отвечают на вопрос «почему», количественные — «сколько». Гипотезу из интервью проверяй цифрами.'},
+    {t:'Проверим масштаб на больших данных: GPS автобусов и валидации проездных',ok:true,title:'Гипотеза → проверка',why:'Данные GPS и валидаций покажут, где и сколько людей теряет время. Это дешевле и быстрее, чем 50 новых интервью.',lesson:'Качественные исследования отвечают на вопрос «почему», количественные — «сколько». Гипотезу из интервью проверяй цифрами.'},
+    {t:'Проведём ещё 50 интервью, чтобы точно',ok:'mid',title:'Можно, но дорого',why:'Интервью уже дали гипотезу. Дальше масштаб быстрее и дешевле проверить по данным, которые у города уже есть.'}
+  ]);},
+async()=>{head('Цифры рассказывают, где болит',4,.48);
+  await say('dana','Опрос 1 200 человек, которые уехали за последний год. Главная причина отъезда:');
+  bars('Главная причина отъезда','опрошено 1 200 человек',[['Транспорт',38],['Работа',27],['Жильё',18],['Досуг',9],['Другое',8]],0);await sleep(900);
+  if(S.flags.wheel)await say('gromov','Досуг — девять процентов... Ну, колесо-то уже строится.','sad');
+  await quiz([
+    {t:'Транспорт: самая большая доля, и мэрия управляет им напрямую',ok:true,title:'Большая боль, которую можно исправить',why:'Транспорт — самая частая причина, и маршрутами управляет город. Быстрый путь к эффекту.',lesson:'Выбирай проблему по двум осям: насколько она большая и насколько ты можешь на неё повлиять.'},
+    {t:'Работа: без работы никто не останется, это фундамент',ok:'mid',title:'Важно, но медленно',why:'Причина серьёзная, но рабочие места создают бизнесы, а не мэрия. Эффект — через годы. Вернёмся к этому, когда будем делить бюджет.'},
+    {t:'Решать всё сразу понемногу: транспорт, работу и жильё',ok:false,title:'Размазать — значит не решить',why:'Распыляя силы, вы получите по чуть-чуть везде и ни одного заметного результата.'}
+  ]);
+  await say('timur','Вот GPS-данные по 22-му маршруту. По расписанию интервал — 40 минут. Но автобусы сбиваются в пачки: то два подряд, то час никого. А маршрут 14 дублирует 22-й, и загрузка у него — 9%.');
+  table('Маршруты: что показывают данные','GPS и валидации за месяц',`<table class="dt"><tr><th>Маршрут</th><th>Автобусов</th><th>Загрузка</th><th>Факт. интервал</th></tr><tr><td>22 (Заводской — Центр)</td><td>6</td><td class="dn"><b>112%</b></td><td>15–75 мин</td></tr><tr><td>7 (Северный — Центр)</td><td>5</td><td class="dn"><b>104%</b></td><td>20–60 мин</td></tr><tr><td>31 (Новый квартал)</td><td>5</td><td class="dn"><b>98%</b></td><td>25–55 мин</td></tr><tr><td>14 (дублирует 22-й)</td><td>8</td><td class="up"><b>9%</b></td><td>30 мин</td></tr></table>`);
+  await quiz([
+    {t:'Закупить 30 новых автобусов за 60 млн',ok:false,title:'Дорого и без проверки',why:'Вы ещё не знаете, поможет ли больше автобусов. А 8 машин маршрута 14 уже ездят почти пустыми.'},
+    {t:'Снять дублирующий маршрут 14 и перевести его 8 автобусов на маршруты 22, 7 и 31 — интервал там упадёт примерно до 12 минут',ok:true,flag:'realloc',title:'Перераспределить, прежде чем покупать',why:'Ресурс уже есть, он просто стоит не там. Это почти бесплатно и проверяемо за месяц.',lesson:'Прежде чем покупать новое, посмотри, нельзя ли перераспределить то, что есть. Самый дешёвый способ проверить гипотезу — часто лучший.'},
+    {t:'Повесить табло реального прибытия на всех остановках',ok:'mid',title:'Полезно, но не главное',why:'Табло снижает неопределённость, но не время ожидания. Хорошая идея для второго шага — или для отдельного теста.'}
+  ]);
+  if(S.flags.goodhart){await say('dana','И ещё. После премии за число рейсов водители пропускают 18% остановок. Премию пришлось срочно отменить.','sad');apply({trust:-3,happy:-2},'bad');guard();}
+  await say('timur','А вот воронка утренней поездки на работу за неделю. Где мы теряем больше всего людей? Нажмите на шаг.');
+  const sc=add(el('div','',sceneStop(9,0)));
+  await mgFunnel({title:'Воронка: дорога на работу',sub:'людей за неделю',steps:[['Собрались ехать на автобусе',10000],['Дошли до остановки',9300],['Дождались автобуса за 15 минут',4200],['Сели — было место',3900],['Доехали к 9:00',3600]],ans:2,onPick:()=>{sc.innerHTML=sceneStop(9,5);},
+    okTitle:'Нашли дыру: ожидание автобуса',why:'Больше половины людей (55%) не дожидаются автобуса за 15 минут и уходят на такси или остаются дома. На остановке это видно — очередь тает. Остальные шаги теряют меньше 10%.',lesson:'Воронка показывает, на каком шаге люди отваливаются. Чинить нужно самый большой провал, а не самый заметный шаг.'});},
+async()=>{head('Собираем гипотезу',5,.45);
+  await say('timur','Дана говорит: «Сначала гипотеза». Соберите её так, чтобы через два месяца было ясно, сработало или нет.');
+  await mgHypo({slots:[
+    {k:'Изменение',o:[['поставить Wi-Fi в салонах',0],['перевести 8 автобусов маршрута 14 на маршруты 22, 7 и 31 (интервал 40 → 12 мин)',1],['перекрасить автобусы в яркий цвет',0]]},
+    {k:'Метрика',o:[['лайки под новостью о маршрутах',0],['доля людей, доехавших на работу к 9:00',1],['число выполненных рейсов',0]]},
+    {k:'Цель',o:[['вырастет с 36% до 45%',1],['станет лучше',0],['вырастет до 100%',0]]},
+    {k:'Срок',o:[['за 8 недель',1],['когда-нибудь',0],['за 1 день',0]]},
+    {k:'Потому что',o:[['55% людей уходят с остановки, не дождавшись автобуса',1],['так делают в Камышине',0],['Громов уверен',0]]}],
+    tpl:w=>`Если ${w(0)}, то ${w(1)} ${w(2)} ${w(3)}, потому что ${w(4)}.`,
+    why:'Сильная гипотеза: изменение связано с найденной болью, есть метрика, текущее значение, цель, срок и причина из данных.',lesson:'Формула гипотезы: «Если [изменение], то [метрика] изменится с X до Y за [срок], потому что [инсайт из данных]». Без цифр и срока гипотезу нельзя проверить.'});
+  await say('dana','Теперь посчитаем длительность теста. Базовая доля — 36%. Чтобы надёжно заметить рост хотя бы на 4 п.п., нужно около 2 300 поездок в каждой группе. В тестовую группу в день попадает примерно 190 поездок.');
+  const o=await quiz([
+    {t:'7 дней — неделя, этого хватит',ok:false,days:7,title:'Не хватит данных',why:'За 7 дней будет около 1 330 поездок — меньше половины нужного объёма. Даже настоящий эффект может утонуть в шуме.'},
+    {t:'12 дней: 2 300 ÷ 190 ≈ 12',ok:'mid',days:12,title:'Почти',why:'По объёму хватает, но тест должен покрывать целые недели: по выходным люди ездят иначе, и неполная неделя исказит результат.'},
+    {t:'14 дней: нужный объём набирается за 12 дней, округляем до целых недель',ok:true,days:14,title:'Правильная длительность',why:'Объём данных набран, и обе недели целиком: будни и выходные попадают в обе группы поровну.',lesson:'Длительность теста считают заранее: нужный объём выборки ÷ трафик в день, с округлением до целых недель.'},
+    {t:'6 месяцев — чтобы наверняка',ok:false,days:180,title:'Перестраховка стоит людей',why:'Через две недели данных уже достаточно. Каждый лишний месяц — это люди, которые ждут автобус по 40 минут на остальных маршрутах.'}
+  ],{ach:'power',hint:'Поделите нужный объём на трафик в день. И вспомните, что люди ездят по-разному в будни и выходные.'});
+  S.abDays=o.days;},
+async()=>{head('Эксперимент на живом городе',7,.55);
+  await say('timur','Как запускаем новые интервалы?');
+  await quiz([
+    {t:'Сразу на всех маршрутах: зачем ждать?',ok:false,fx:{trust:-2},title:'Не с чем сравнить',why:'Если запустить везде, результат смешается с сезоном, погодой и ремонтами дорог. Дана уговорила вас разделить маршруты на группы.'},
+    {t:'Берём 6 похожих маршрутов: на 3 — новый интервал, на 3 — всё как было',ok:true,fx:{trust:3},title:'Это A/B-тест',why:'Похожие маршруты в одно время: погода, сезон и ремонты влияют на обе группы одинаково. Разница покажет эффект именно интервала.',lesson:'A/B-тест: контрольная группа живёт как раньше, тестовая получает изменение. Сравниваем их в одно и то же время.'},
+    {t:'Только на маршруте у дома Громова — он лично проследит',ok:false,fx:{trust:-2},react:['gromov','А что такого? Я бы лично каждый автобус проверял!','happy'],title:'Смещённая выборка',why:'Один «особый» маршрут не похож на остальные, его результат нельзя перенести на город. Дана уговорила вас разделить маршруты на группы.'}
+  ]);
+  const days=Math.min(S.abDays||14,21);
+  if(S.abDays===180)await narr('Вы заложили 6 месяцев, но график покажем за первые три недели — дальше линии уже не меняются.');
+  const r=await mgAB({title:'A/B-тест: доля доехавших к 9:00',N:days,c:.362,t:.471,goal:.45,perDay:190,peekDay:3,peekVal:.61,peekWho:'gromov',peekText:'Смотрите, тест уже %v%! Всё ясно — останавливаем и запускаем по всему городу. Зачем людей мучить?'});
+  if(r.stopped){S.flags.falsePositive=true;S.flags.buses=true;score('bad',10);apply({},'bad');
+    await feedback({kind:'bad',title:'Тест остановлен на третий день',why:'В первые дни данных мало, и цифры скачут. 61% на третий день — скорее случайность и эффект новизны, чем результат. Но решение принято: новые интервалы раскатывают по всему городу.',lesson:'Не останавливай тест, когда результат «уже красивый». Решай по заранее заданной длительности и объёму выборки: ранние всплески часто оказываются шумом.',tag:'Эксперимент'});
+    await newspaper('Мэр раскатил новые интервалы по всему городу за один день','«Тест показал 61%!» — заявил Громов на пресс-конференции. Водители жалуются, что автобусов на все маршруты не хватает.');return;}
+  achieve('patient');S.flags.buses=true;
+  if(S.abDays===7){await say('dana','Тест закончился, но данных не хватило: разница на грани случайности. Пришлось продлить ещё на неделю — потеряли время.','sad');apply({happy:-1},'bad');}
+  if(S.abDays===180){await say('dana','Результат стабилен уже месяц, а тест продолжается. Люди на остальных маршрутах так и ждут по 40 минут.','sad');apply({pop:-500,happy:-2},'bad');guard();}
+  apply({happy:3,pop:400},'ok');
+  await say('dana','Итоги. Параллельно мы тестировали табло прибытия на четырёх остановках. Вот обе таблицы — что из этого можно утверждать?');
+  table('Итоги экспериментов','p — вероятность увидеть такую разницу случайно',`<table class="dt"><tr><th>Эксперимент</th><th>Контроль</th><th>Тест</th><th>Наблюдений</th><th>p</th></tr><tr><td>Интервал 12 минут</td><td>36,2%</td><td class="up"><b>47,1%</b></td><td>2 × ${fmt(days*190)}</td><td><b>&lt; 0,001</b></td></tr><tr><td>Табло прибытия</td><td>36,0%</td><td class="up"><b>38,5%</b></td><td>2 × 310</td><td><b>0,52</b></td></tr></table>`);
+  await quiz([
+    {t:'Оба изменения работают — масштабируем оба',ok:false,title:'Табло ничего не доказало',why:'p = 0,52 значит: такую разницу почти в половине случаев можно получить просто случайно. Это не доказательство эффекта.'},
+    {t:'Интервал — эффект доказан, масштабируем. Табло — результат неотличим от случайности: нужно больше данных, прежде чем тратить деньги',ok:true,title:'Отличаете эффект от шума',why:'Большая выборка и p < 0,001 — эффект интервала надёжен. У табло 600 наблюдений и p = 0,52 — вывода пока нет.',lesson:'p-value показывает, насколько легко получить такую разницу случайно. Маленькая выборка и большое p — не «не работает», а «пока не знаем».'},
+    {t:'Табло выгоднее: +2,5 п.п. всего за 2 млн',ok:false,title:'Считаете шум',why:'2,5 п.п. на 600 наблюдениях — в пределах случайных колебаний. Эффект может быть и нулевым.'},
+    {t:'Ничего не доказано, пока p не равно нулю',ok:false,title:'Слишком строго',why:'p никогда не бывает ровно нулём. p < 0,001 — очень сильное свидетельство.'}
+  ],{ach:'pvalue'});
+  await newspaper('Автобусы ходят каждые 12 минут! Очереди на остановках тают','Эксперимент мэрии подтвердил: доля жителей, которые вовремя добираются до работы, выросла с 36% до 47%. Громов назвал это «удачным совпадением».');},
+async()=>{
+  if(S.flags.falsePositive){head('Эффект испарился',9,.7,{rain:.4});
+    await say('dana','Прошло два месяца. Доля доехавших вовремя — 39%, а не 61%. Автобусов на все маршруты не хватило, интервалы поплыли. На срочную аренду машин ушло 12 млн.','sad');apply({budget:-12,trust:-4},'bad');guard();
+    await say('gromov','Это водители виноваты! И погода. Давайте скажем прессе, что всё работает, а цифры подправим.','angry');
+    await quiz([
+      {t:'Подправить отчёт для прессы: показать 61% из третьего дня',ok:false,fatal:{title:'Подделка отчётности',why:'Журналисты получили выгрузку GPS от водителей. Через неделю вышло расследование «Мэрия рисует цифры». Прокуратура начала проверку, горсовет отправил вас в отставку.',lesson:'Подгонка данных под желаемый результат разрушает главное — доверие к цифрам. Ошибиться можно, скрыть ошибку — нельзя.'}},
+      {t:'Признать ошибку и провести нормальный тест на две недели',ok:true,fx:{trust:5,happy:2,pop:300},react:['dana','Через две недели честный результат: 47% против 36%. Интервал работает — просто эффект меньше, чем «показалось».','happy'],title:'Ошибиться не страшно',why:'Перезапуск стоил времени, но дал честный ответ.',lesson:'Ошибки случаются. Сильный продакт признаёт их быстро и возвращается к проверке, а не ищет виноватых.'},
+      {t:'Наказать водителей: это они срывают интервалы',ok:false,fx:{trust:-6},title:'Не там ищете',why:'Водители не виноваты, что автобусов не хватило. Проблема в решении, принятом на шумных данных.'}
+    ]);return;}
+  head('Неожиданный опрос',9,.66);
+  await say('vera','Господин мэр! Сегодня доехала до поликлиники за двадцать минут. Дочке позвонила — сказала, что пока не переезжаю.','happy');
+  await say('gromov','А вот квартальный опрос: довольных транспортом стало меньше — было 58%, стало 55%! Ваши автобусы провалились, откатываем.','happy');
+  await say('dana','Подождите. Давайте посмотрим по районам и на то, кто отвечал.');
+  table('Довольны транспортом','квартальный опрос',`<table class="dt"><tr><th>Группа</th><th>До: доля</th><th>До: ответов</th><th>После: доля</th><th>После: ответов</th></tr><tr><td>Центр</td><td>70%</td><td>800</td><td class="up"><b>74%</b></td><td>500</td></tr><tr><td>Окраины</td><td>34%</td><td>400</td><td class="up"><b>45%</b></td><td>900</td></tr><tr class="tot"><td>Весь город</td><td>58%</td><td>1 200</td><td class="dn">55%</td><td>1 400</td></tr></table>`);
+  await quiz([
+    {t:'Громов прав: в целом довольных меньше, нужно откатить',ok:false,fx:{happy:-3},title:'Это парадокс Симпсона',why:'В каждом районе довольных стало больше. Общая цифра упала только потому, что изменился состав опрошенных.'},
+    {t:'В каждом районе стало лучше. Общая цифра упала, потому что теперь отвечает гораздо больше жителей окраин — они начали ездить и участвовать в опросе',ok:true,react:['gromov','То есть... в среднем хуже, а везде лучше? Ерунда какая-то.','surprised'],title:'Увидели парадокс Симпсона',why:'Окраины, где довольных исторически меньше, теперь занимают 64% ответов вместо 33%. Общее среднее тянется вниз, хотя каждая группа выросла.',lesson:'Парадокс Симпсона: общий тренд может быть противоположен тренду в каждой группе, если меняется состав выборки. Смотри на сегменты.'},
+    {t:'Опрос сломан, результаты выбрасываем',ok:false,title:'Опрос не сломан',why:'Данные корректны — их просто нужно правильно читать: по группам и с учётом состава.'}
+  ],{ach:'simpson',hint:'Посмотрите, сколько ответов дал каждый район до и после.'});},
+async()=>{head(S.flags.wheel?'Призраки прошлого: колесо':'Камеры Громова',11,.5);
+  if(S.flags.wheel){await say('timur','Колесо открыли. Загрузка — 12%, по будням оно крутится пустым. Содержание стоит 6 млн в год.','sad');
+    await say('gromov','Нужно вложить ещё 15 млн в подсветку и аттракционы вокруг! Иначе выходит, что 40 миллионов мы выбросили на ветер.','angry');
+    await quiz([
+      {t:'Вкладываем 15 млн: нельзя, чтобы прошлые деньги пропали',ok:false,fx:{budget:-15},title:'Ловушка невозвратных затрат',why:'Подсветку сделали, загрузка выросла до 15%. Потраченные раньше деньги всё равно не вернулись, а новые ушли туда же.'},
+      {t:'40 млн уже потрачены при любом решении. Смотрим только в будущее: сдаём колесо в аренду оператору и перестаём платить за содержание',ok:true,fx:{budget:6,trust:4},flag:'wheelRent',react:['gromov','Сдать моё колесо?! Ну... если оператор платит...','sad'],title:'Холодная голова',why:'Оператор взял колесо в аренду и сам развивает аттракцион. Город перестал тратить на содержание и получает аренду.',lesson:'Невозвратные затраты — то, что уже потрачено и не вернётся. Они не должны влиять на решение. Сравнивай только будущие выгоды и расходы.'},
+      {t:'Ничего не делаем, пусть стоит',ok:'mid',fx:{budget:-6},title:'Тихие потери',why:'Колесо продолжает съедать 6 млн в год. Бездействие — тоже решение, и тоже стоит денег.'}
+    ],{ach:'sunk'});}
+  else{await say('gromov','Мэр, у меня железные данные! В соседнем Камышине построили светомузыкальный фонтан — туристов стало на 40% больше. Смотрите сами.','happy');
+    const months=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'],vals=[30,28,33,38,46,58,70,82,52,38,31,29];
+    const allSeen=await mgToggle({title:'Туристы в Камышине, тыс. в месяц',sub:'фонтан открыт в мае',modes:[{name:'Версия Громова',chart:{labels:['июн','июл','авг'],series:[{v:[58,70,82],c:'#ffb547'}],yMax:90,yStep:30,type:'bar'}},{name:'Весь год',chart:{labels:months,series:[{v:vals,c:'#5f6f86',hc:'#ffb547'}],hl:[5,6,7],yMax:90,yStep:30,type:'bar'}}],legend:'Переключите график на «Весь год».'});
+    await quiz([
+      {t:'Всё честно: +40% туристов, строим фонтан',ok:false,flag:'fountainPlan',title:'Купились на удобный кусок',why:'Июнь—август — сезон отпусков. Летом туристов много везде, с фонтаном или без. Осенью цифры вернулись к прежним.'},
+      {t:'Громов показал только лето. За весь год видна сезонность: осенью туристов столько же, сколько до фонтана',ok:true,react:['gromov','Ну... летом-то фонтан красивее...','sad'],title:'Поймали черри-пикинг',why:'На полном периоде видно, что рост — это сезон, а не фонтан.',lesson:'Черри-пикинг — когда показывают только удобный кусок данных. Проси полный период и сравнение с тем же сезоном прошлого года.'},
+      {t:'Фонтаны в принципе бесполезны',ok:'mid',title:'Вывод шире данных',why:'Данные не говорят, что фонтаны бесполезны. Они говорят, что этот график не доказывает эффект.'}
+    ],{ach:'cherry'});
+    if(!allSeen())await say('dana','Кстати, переключатель «Весь год» был там не для красоты. Полный период — первое, о чём стоит попросить.');}
+  await say('gromov','Ещё одна моя победа: в прошлом году я поставил камеры на 5 перекрёстках с худшей аварийностью. Аварий там стало на 40% меньше! Прошу 30 млн на камеры на 50 перекрёстков.','happy');
+  await quiz([
+    {t:'Цифры говорят сами за себя: выделяем 30 млн',ok:false,fx:{budget:-30},title:'Возврат к среднему',why:'Через год аварийность на новых перекрёстках почти не изменилась. А на «худших» пяти она бы и так снизилась: экстремальные значения часто сами возвращаются к среднему.'},
+    {t:'Худшие перекрёстки часто сами улучшаются на следующий год. Сравним с похожими перекрёстками без камер, прежде чем тратить',ok:true,react:['dana','Проверила: на пяти похожих перекрёстках без камер аварий стало на 33% меньше. Реальный эффект камер — около 7 п.п.','neutral'],title:'Не поверили чуду',why:'Камеры немного помогают, но основная часть «эффекта» — статистика. Решение о 50 перекрёстках можно принимать с реальной оценкой.',lesson:'Возврат к среднему: если выбрать худших по прошлому году, в следующем они почти всегда станут лучше — даже без вмешательства. Нужна контрольная группа.'},
+    {t:'Отказать: камеры — это слежка',ok:false,title:'Решение по эмоциям',why:'Дело не в отношении к камерам, а в том, что вы не проверили, есть ли эффект.'}
+  ],{ach:'regress'});},
+async()=>{head('Бюджет на год',13,.6);
+  await say('dana',`На год у нас ${S.budget} млн. Проектов больше, чем денег. Оцените их по RICE и соберите портфель.`);
+  await mgRice([
+    {k:'buses2',n:'Новые автобусы на все маршруты',d:'Масштабируем подтверждённый эффект.',R:30000,I:3,C:.8,E:4,cost:35,fx:{pop:2600,happy:7}},
+    {k:'yards',n:'Ремонт дворов и освещение',d:'Жалоба №2 из интервью.',R:20000,I:1,C:.8,E:3,cost:25,fx:{pop:900,happy:5}},
+    {k:'bikes',n:'Сеть велодорожек',d:'Студенты ездят на самокатах.',R:9000,I:2,C:.7,E:3,cost:20,fx:{pop:500,happy:3}},
+    {k:'it',n:'IT-парк для новых рабочих мест',d:'Нужны резиденты, гарантий нет.',R:6000,I:3,C:.5,E:8,cost:50,fx:{pop:1600,happy:2}},
+    {k:'fountain',n:'Светомузыкальный фонтан',d:'Любимая идея Громова.',R:5000,I:.5,C:.5,E:2,cost:30,fx:{happy:1}},
+    {k:'stops',n:'Табло прибытия на 60 остановках',d:'Эффект пока не доказан.',R:15000,I:.5,C:.4,E:2,cost:12,fx:{happy:1}}
+  ]);
+  await newspaper(S.flags.buses2?'Новые автобусы вышли на все маршруты':'Мэрия утвердила бюджет года',`Бюджет утверждён на сессии горсовета. «Мэр ${S.name} считает каждый рубль», — говорят в мэрии. Громов воздержался при голосовании.`);},
+async()=>{head('Кризис в ленте',16,.92);
+  await narr('Пятница, 23:40. Телефон разрывается. У вас 20 секунд, чтобы ответить журналистам, пока история не разлетелась.');
+  await say('dana','Главная метрика растёт: 61% → 68%. Но мы смотрели только на неё — и не заметили, что сломали по пути.','sad');
+  await mgCrisis({seconds:20,posts:[['Жители у депо','У автобусного депо грохот до двух ночи. Уже третий месяц!','1,2 тыс.'],['Водитель Сергей','Работаем по 12 часов, чтобы держать интервал. Еле на ногах.','860'],['Инсайтград Live','Мэрия гордится автобусами. А что с людьми рядом с депо?','2,4 тыс.']],
+    opts:[
+      {t:'Заблокировать паблик «Инсайтград Live» и подать в суд на автора',ok:false,fatal:{title:'Эффект Стрейзанд',why:'Новость о блокировке паблика разлетелась по всей стране. Водители объявили забастовку, жители вышли к мэрии. Губернатор отправил вас в отставку.',lesson:'Попытка заткнуть критику превращает локальную проблему в общенациональную. В кризисе признание и действия работают, запреты — нет.'}},
+      {t:'Признать проблему: перенести ночные рейсы, нанять сменщиков и добавить в дашборд защитные метрики — шум у депо и переработки водителей',ok:true,fx:{trust:5,happy:3},flag:'crisisOk',title:'Защитные рамки',why:'Жалобы пошли вниз, водители получили сменщиков. А в дашборде теперь видно не только рост, но и его цену.'},
+      {t:'Удалить негативные комментарии на странице мэрии и выпустить позитивный пост',ok:false,fx:{trust:-8,happy:-3},title:'Скриншоты вечны',why:'Скриншоты удалённых комментариев разлетелись быстрее самих комментариев.'}],
+    timeout:{ok:false,fx:{trust:-8,happy:-4},title:'Мэрия промолчала',why:'К утру историю подхватили все городские паблики, а водители пообещали забастовку.'},
+    lesson:'Guardrail-метрики защищают от побочных эффектов: главная цифра растёт, а они следят, чтобы по пути ничего не сломалось.'});},
+async()=>{head('Средняя температура по больнице',20,.58);
+  await say('dana','Ежегодный опрос: средняя удовлетворённость жизнью в городе — 71%. Громов уже готовит праздничный пресс-релиз.','happy');
+  await say('timur','Подождите. Давайте посмотрим по районам — нажимайте на карту.');
+  await mgMap({title:'Удовлетворённость по районам',river:'р. Метричка',bridge:1,bridgeBroken:1,d:[{n:'Центр',v:79,p:'M40 40L190 30 210 120 70 140Z',lx:130,ly:82},{n:'Северный',v:74,p:'M190 30L330 25 320 110 210 120Z',lx:262,ly:70},{n:'Заводской',v:72,p:'M70 140L210 120 230 215 60 230Z',lx:145,ly:176},{n:'Новый квартал',v:77,p:'M210 120L320 110 330 205 230 215Z',lx:272,ly:160},{n:'Заречье',v:41,p:'M430 40L570 50 560 225 440 215Z',lx:500,ly:132}]});
+  await say('vera','Моя подруга живёт в Заречье. Мост на ремонте второй год, автобусы туда не ходят. Они там будто не в нашем городе.','sad');
+  await quiz([
+    {t:'71% — отличный результат, выпускаем пресс-релиз',ok:false,fx:{happy:-3},react:['gromov','Вот! Наконец-то разумное решение.','happy'],title:'Среднее спрятало проблему',why:'Пресс-релиз вышел, а Заречье продолжило пустеть. Жители района назвали его «издевательством».'},
+    {t:'Среднее скрыло отстающий район. Нужен отдельный план для Заречья: временный автобус через объездной мост',ok:true,fx:{pop:700,happy:3,budget:-5},flag:'zarechie',title:'Сегмент найден',why:'Временный маршрут запустили за месяц. Удовлетворённость в Заречье выросла с 41% до 63%.',lesson:'Средние значения прячут сегменты. Разбивай метрику по группам: районам, возрасту, каналам. Проблема часто живёт в одном сегменте.'},
+    {t:'Заречье — выброс, исключим его из отчёта',ok:false,fx:{trust:-6},title:'Неудобные данные — тоже данные',why:'Исключать «плохие» сегменты из отчёта — самообман. Журналисты нашли полную таблицу через неделю.'}
+  ],{ach:'segment',hint:'Есть район, который сильно отличается от остальных. Почему так может быть?'});
+  await newspaper(S.flags.zarechie?'В Заречье пошёл автобус! «Наконец-то мы снова в городе»':'Мэрия отчиталась о 71% довольных. В Заречье не согласны',S.flags.zarechie?'Временный маршрут через объездной мост соединил район с центром. До выборов — четыре месяца.':'Жители Заречья собрали подписи за отставку мэра. До выборов — четыре месяца.');}
+];
+
+/* ---------- SCENARIO B ---------- */
+SCEN.B.chapters=[
+async()=>{head('Мёртвая рыба',1,.32,{fog:.5});add(el('div','',sceneRiver()));
+  await narr('Порт-Северный, 61 000 жителей. Утро вашего первого дня: на набережной Ледянки — сотни мёртвых рыб. Видео уже набрало 200 тысяч просмотров.');
+  await say('liza','Это комбинат! Они годами сбрасывают отходы в реку. Закройте его, мэр, прямо сегодня!','angry');
+  await say('irina','На комбинате работают 6 000 человек, это 40% налогов города. Мы соблюдаем нормы. Рыба гибнет каждую весну.','neutral');
+  await say('gromov','Главное — успокоить людей. Скажем, что всё под контролем.');
+  await quiz([
+    {t:'Закрыть комбинат до выяснения обстоятельств',ok:false,fatal:{title:'Город без работы',why:'Комбинат остановился. 6 000 человек ушли в простой, бюджет потерял 40% доходов, поставщики начали увольнения. Через две недели горсовет выразил вам недоверие. А анализы потом показали: рыба погибла не только из-за комбината.',lesson:'Необратимые решения на эмоциях — самые дорогие. Когда цена ошибки огромна, сначала собери данные.'}},
+    {t:'Заявить, что всё под контролем, и подождать, пока шум утихнет',ok:false,fx:{trust:-6,happy:-4},title:'Шум не утих',why:'Через неделю всплыла новая партия рыбы. Видео с вашим «всё под контролем» стало мемом.'},
+    {t:'Взять пробы воды в трёх точках: выше сброса комбината, ниже сброса и у городских очистных',ok:true,fx:{trust:5},title:'Проверяете все причины',why:'Через три дня ответ: ниже сброса комбината фенол превышен в 4 раза. Но у городских очистных аммиак превышен в 6 раз. Виноватых двое.',lesson:'Разбивай проблему на возможные причины и проверяй каждую. Самый громкий подозреваемый — не обязательно единственный.'},
+    {t:'Выписать комбинату максимальный штраф',ok:false,fx:{budget:5,trust:-3},title:'Наказали, не разобравшись',why:'Штраф уплачен, но причина не найдена. Через месяц рыба погибла снова — у городских очистных.'}
+  ],{ach:'root'});
+  await say('dana','Пробы показали: часть вины — на городских очистных. А они принадлежат мэрии. Что делаем с этими данными?','neutral');
+  await quiz([
+    {t:'Не публиковать данные по очистным, чтобы не подставлять мэрию',ok:false,fatal:{title:'Мэрия скрывала правду',why:'Лиза получила результаты от лаборатории и опубликовала их. Заголовок «Мэрия травит реку и молчит» облетел всю область. Горсовет выразил вам недоверие.',lesson:'Данные, неудобные для тебя, — тоже данные. Скрытая правда всплывает в худший момент и стоит дороже признания.'}},
+    {t:'Опубликовать все результаты, включая вклад городских очистных, и сразу показать план ремонта',ok:true,fx:{trust:6,budget:-10},react:['liza','Честно. Не ожидала от мэрии. Но мы будем следить.','surprised'],title:'Честность как стратегия',why:'Ремонт очистных стоил 10 млн, зато вы получили право требовать того же от комбината.'},
+    {t:'Публиковать только данные по комбинату — главный загрязнитель всё-таки они',ok:false,fx:{trust:-4},react:['irina','Интересная у вас избирательность, мэр.','angry'],title:'Избирательная правда',why:'Ирина Ланская заказала свои пробы и показала прессе данные по очистным. Переговоры с комбинатом стали в разы сложнее.'}
+  ]);
+  await newspaper('Мэрия признала: реку травят двое — комбинат и городские очистные','Результаты проб опубликованы полностью. Эко-активисты называют это «первым честным разговором за десять лет».');},
+async()=>{head('Цифры больницы',3,.55);
+  await say('ahmed','В Заводском районе детей с астмой обращается гораздо больше. Хотя... в абсолютных цифрах почти одинаково: 312 обращений против 288 в Центре за год.','neutral');
+  await say('dana','В Заводском живут 6 500 детей, в Центре — 12 000.');
+  await quiz([
+    {t:'Почти одинаково: 312 против 288, разница около 8%',ok:false,title:'Сравнили штуки, а не частоту',why:'Детей в районах разное количество. Сравнивать нужно частоту — обращения на 1 000 детей.'},
+    {t:'Примерно в 2 раза выше: 48 против 24 обращений на 1 000 детей',ok:true,title:'Нормировали правильно',why:'312 ÷ 6,5 = 48 и 288 ÷ 12 = 24. В Заводском частота астмы вдвое выше.',lesson:'Абсолютные числа обманывают, когда группы разного размера. Сравнивай частоты: на 1 000 человек, на пользователя, на заказ.'},
+    {t:'В Центре хуже: там детей больше, значит и проблема больше',ok:false,title:'Наоборот',why:'Больше детей — больше обращений при той же частоте. По частоте Центр как раз благополучнее.'},
+    {t:'В 4 раза выше',ok:false,title:'Пересчитайте',why:'312 ÷ 6,5 ≈ 48, 288 ÷ 12 = 24. Разница — в 2 раза.'}
+  ],{ach:'norm',hint:'Поделите обращения на число детей в тысячах.'});
+  await say('gromov','Ну всё, доказано: виноват комбинат! Заводской район прямо рядом с ним.','happy');
+  await say('dana','Не спешите. Заводской — это ещё и старые дома с сыростью и плесенью, и главная дорога для грузовиков.');
+  await quiz([
+    {t:'Связь с комбинатом доказана — требуем закрыть цеха',ok:false,fx:{trust:-3},title:'Связь — ещё не причина',why:'Рядом с комбинатом есть и другие факторы. Если виноваты грузовики или плесень, закрытие цехов не поможет детям.'},
+    {t:'Причин может быть три: выбросы, грузовики и сырость в домах. Нужно разделить их: датчики воздуха и обследование квартир',ok:true,fx:{trust:3},title:'Ищете третий фактор',why:'Обследование квартир показало плесень в 38% квартир Заводского района против 9% в Центре. Значит, причин несколько.',lesson:'Корреляция — не причинность. Если две вещи встречаются вместе, проверь, нет ли других факторов, которые объясняют связь.'},
+    {t:'Данных мало, вопрос закрываем',ok:false,fx:{happy:-4},title:'Дети продолжают болеть',why:'Отказ разбираться — тоже решение. Родители Заводского района запомнили его.'}
+  ],{ach:'confound'});},
+async()=>{head('Откуда грязный воздух',5,.5);
+  await say('dana','Мы купили 20 датчиков качества воздуха. Где их поставить?');
+  await quiz([
+    {t:'У школ в центре — там больше всего детей',ok:false,title:'Смещённая выборка',why:'В центре воздух чище всего. Датчики покажут «всё хорошо» и не увидят проблему там, где она есть.'},
+    {t:'Только вокруг комбината — там очевидно грязно',ok:'mid',title:'Найдёте то, что ищете',why:'Вы подтвердите свою догадку, но не увидите другие источники. Это предвзятость подтверждения.'},
+    {t:'Равномерно по сетке районов и по одному у каждого подозреваемого источника: комбинат, трасса, очистные',ok:true,title:'Честная выборка',why:'Так видно и общую картину, и вклад каждого источника.',lesson:'Место и способ сбора данных определяют, что ты увидишь. Смещённая выборка подтверждает ожидания вместо того, чтобы их проверять.'}
+  ]);
+  await say('dana','Вот средний уровень мелких частиц по часам за месяц. Переключайтесь между буднями и выходными.');
+  const hrs=Array.from({length:24},(_,i)=>String(i));
+  const wd=[52,66,72,70,58,40,38,62,70,64,42,36,34,35,36,38,44,58,64,56,44,40,42,46];
+  const we=[50,64,70,69,57,39,33,34,36,35,33,31,30,31,32,33,34,35,36,34,33,34,38,44];
+  await mgToggle({title:'Частицы PM2.5 по часам, мкг/м³',sub:'Заводской район',modes:[{name:'Будни',chart:{labels:hrs,series:[{v:wd,c:'#ffb547'}],yMax:80,yStep:20,goal:35}},{name:'Выходные',chart:{labels:hrs,series:[{v:we,c:'#6aa8ff'}],yMax:80,yStep:20,goal:35}}]});
+  await quiz([
+    {t:'Все пики даёт комбинат',ok:false,title:'Не все',why:'Утренний и вечерний пики пропадают по выходным, а комбинат работает без выходных.'},
+    {t:'Ночной пик есть и в будни, и в выходные — это ночные выбросы комбината. Утренний и вечерний пропадают в выходные — это грузовой транзит',ok:true,flag:'knowsSources',title:'Разделили источники',why:'Два разных источника — два разных решения: ночной режим комбината и маршрут для грузовиков.',lesson:'Сравнение разных периодов (будни и выходные, до и после) помогает разделить причины, которые на одном графике сливаются.'},
+    {t:'Пики случайны — это шум датчиков',ok:false,title:'Слишком регулярно для шума',why:'Пики повторяются в одно и то же время каждый день. Шум так себя не ведёт.'},
+    {t:'Все пики дают грузовики',ok:false,title:'А ночью?',why:'Ночью грузовиков почти нет, а пик самый высокий.'}
+  ],{ach:'pattern',hint:'Какой пик пропадает в выходные, а какой остаётся?'});},
+async()=>{head('Переговоры с комбинатом',7,.66);
+  await say('irina','Фильтры на всех цехах стоят 300 млн. Мы поставим их за 5 лет, если город даст налоговую льготу — 15 млн в год.','neutral');
+  await say('dana',S.flags.knowsSources?'По нашим датчикам: если перенести ночной сброс на дневное время с сильным ветром и ограничить объём, ночные пики упадут примерно на 60%. Это почти бесплатно.':'Мы не до конца понимаем, какие выбросы дают ночной пик. Но если перенести ночной сброс на дневное время, должно стать лучше.');
+  await quiz([
+    {t:'Подписываем: фильтры за 5 лет, льгота 15 млн в год',ok:'mid',fx:{budget:-15},title:'Платим за обещания',why:'Льготу платим сразу, но промежуточных обязательств нет. Через год фильтров ноль, а льгота стала привычкой.'},
+    {t:'Поэтапно: сразу — ночной режим сброса, фильтры — за 2 года, а льгота выплачивается, только если датчики показывают снижение пиков',ok:true,fx:{trust:4,happy:2},flag:'nightStop',react:['irina','Жёстко. Но честно: платите за результат. Согласна.','neutral'],title:'Договор на результат',why:'Самый дешёвый шаг даёт большую часть эффекта сразу, а деньги привязаны к измеримому результату.',lesson:'Привязывай договорённости к измеримому результату, а не к обещаниям. И начинай с дешёвого шага, который даёт большую часть эффекта.'},
+    {t:'Подаём в суд и требуем фильтры за год',ok:false,fx:{budget:-12,trust:-4},react:['irina','Тогда увидимся в суде. Года через три.','angry'],title:'Война вместо результата',why:'Суд идёт уже полгода, юристы обошлись в 12 млн, выбросы прежние.'},
+    {t:'Комбинат — главный налогоплательщик, не будем давить',ok:false,fx:{happy:-5},react:['liza','Значит, дети подождут? Отлично.','angry'],title:'Проблема осталась',why:'Пики остались, а родители Заводского района потеряли надежду.'}
+  ],{ach:'outcome'});},
+async()=>{head('Пилот ночного режима',9,.45);
+  await say('dana','Комбинат на месяц остановил ночной сброс в цехах 1–3. Цеха 4–6 работали как раньше. Вот средний ночной уровень частиц рядом с ними.');
+  table('Ночной уровень частиц, мкг/м³','до и после пилота',`<table class="dt"><tr><th>Группа</th><th>До</th><th>После</th><th>Изменение</th></tr><tr><td>Цеха 1–3 (ночной режим)</td><td>85</td><td>40</td><td class="up"><b>−45</b></td></tr><tr><td>Цеха 4–6 (как раньше)</td><td>80</td><td>70</td><td class="up"><b>−10</b></td></tr></table><p class="cap" style="margin-top:8px">В месяц пилота дул сильный ветер.</p>`);
+  await say('gromov','Минус 45! Отличный результат, так и запишем в отчёт.','happy');
+  await quiz([
+    {t:'−45: было 85, стало 40',ok:false,title:'Не учли фон',why:'В этот месяц дул сильный ветер, и воздух стал чище везде — даже у цехов, где ничего не меняли.'},
+    {t:'−35: (85 − 40) − (80 − 70)',ok:true,flag:'pilotOk',fx:{happy:3,trust:2},title:'Разность разностей',why:'Из изменения в тестовой группе вычли изменение в контрольной — то, что дала погода. Чистый эффект ночного режима — около 35.',lesson:'Разность разностей: эффект = изменение в тестовой группе минус изменение в контрольной. Так из результата убирается общий фон — сезон, погода, тренд.'},
+    {t:'−10: смотрим на контрольные цеха',ok:false,title:'Это фон, а не эффект',why:'−10 — это то, что дал ветер. Эффект ночного режима — разница между группами.'},
+    {t:'Эффекта нет: у контрольных цехов тоже снизилось',ok:false,title:'Снизилось по-разному',why:'У тестовых цехов снижение в 4,5 раза больше. Эффект есть, просто его нужно отделить от фона.'}
+  ],{ach:'did',hint:'Посчитайте, сколько дал ветер, и вычтите это из результата.'});
+  if(S.flags.pilotOk){S.flags.cleanRiver=true;await newspaper('Ночной воздух у комбината стал чище почти вдвое','Пилот ночного режима распространили на все цеха. Доктор Ахмедов отмечает первые снижения обращений по астме.');}},
+async()=>{head('Наводнение',11,.86,{rain:1});
+  await narr('Июль, 22:40. Третьи сутки ливень. Ледянка поднялась на 2,4 метра. Гидрологи дают 70%, что к 4 утра вода зальёт Нижнюю набережную — там живут 1 800 человек.');
+  await mgCrisis({seconds:18,posts:[['Нижняя набережная','Вода уже у подъездов! Что нам делать?!','3,1 тыс.'],['Северный курьер','Гидрологи: пик паводка ожидается к 4 утра','1,8 тыс.'],['Громов','Не будем сеять панику, 70% — это не 100%.','420']],
+    opts:[
+      {t:'Не объявлять эвакуацию: 70% — это не 100%, не будем сеять панику',ok:false,fatal:{title:'Ночь на Нижней набережной',why:'В 3:50 вода зашла в первые этажи. Спасатели вывозили людей на лодках. Пострадавших можно было избежать. Утром горсовет потребовал вашей отставки.',lesson:'При высокой цене ошибки решают не по самому вероятному исходу, а по ожидаемому ущербу. 70% риска для 1 800 человек — повод действовать сейчас.'}},
+      {t:'Эвакуировать Нижнюю набережную по карте риска, открыть пункты в школах и честно объяснить жителям расчёт',ok:true,fx:{trust:6,happy:2},flag:'floodOk',title:'Решение по ожидаемому ущербу',why:'Вода пришла в 3:50. Все 1 800 жителей были в школах. Ущерб — только имуществу.'},
+      {t:'Дождаться официального подтверждения от МЧС',ok:false,fx:{trust:-8,happy:-5},title:'Подтверждение опоздало',why:'Подтверждение пришло в 3:30 — эвакуация шла в панике, по колено в воде.'}],
+    timeout:{ok:false,fx:{trust:-9,happy:-6},title:'Мэрия молчала',why:'Пока вы думали, жители начали эвакуироваться сами — в темноте и панике.'},
+    lesson:'Решения в условиях неопределённости принимают по ожидаемому ущербу: вероятность × цена ошибки. Ждать полной уверенности — тоже выбор.'});},
+async()=>{head('Бюджет на год',14,.6);
+  await say('dana',`На год у нас ${S.budget} млн. Соберите портфель по RICE.`);
+  await mgRice([
+    {k:'bypass',n:'Объездная для грузовиков',d:'Уберёт транзит из Заводского района.',R:20000,I:2,C:.8,E:10,cost:90,fx:{pop:1200,happy:5}},
+    {k:'storm',n:'Ливневая канализация набережной',d:'Снизит риск затопления.',R:8000,I:3,C:.9,E:6,cost:45,fx:{happy:3}},
+    {k:'park',n:'Парк на набережной Ледянки',d:'Идея Лизы, жители за.',R:25000,I:1,C:.6,E:3,cost:20,fx:{happy:4,pop:400}},
+    {k:'sensors',n:'Датчики воздуха у всех школ',d:'Прозрачность для родителей.',R:12000,I:1,C:.9,E:1,cost:8,fx:{trust:3,happy:1}},
+    {k:'stadium',n:'Новый стадион',d:'Мечта Громова.',R:15000,I:1,C:.4,E:12,cost:70,fx:{happy:2}},
+    {k:'mold',n:'Субсидии на ремонт сырых домов',d:'Третий источник астмы.',R:6500,I:2,C:.7,E:4,cost:25,fx:{happy:3,pop:300}},
+    {k:'trucks',n:'Запрет дневного транзита грузовиков',d:'Почти бесплатно, логисты против.',R:18000,I:1,C:.6,E:2,cost:3,fx:{happy:3,trust:-1}}
+  ]);},
+async()=>{head('Отчёт, который слишком хорош',18,.55);
+  await say('irina','Мы выполнили договор: среднемесячный уровень частиц упал на 30%. Ждём льготу.','happy');
+  await say('dana','Я посмотрела почасовые данные. Переключите график.','neutral');
+  const m=['янв','фев','мар','апр','май','июн'];
+  await mgToggle({title:'Как меняется воздух у комбината',sub:'по месяцам',modes:[{name:'Среднее за месяц',chart:{labels:m,series:[{v:[62,58,52,48,45,43],c:'#5ad19a'}],yMax:80,yStep:20,type:'bar'}},{name:'Часы выше нормы',chart:{labels:m,series:[{v:[60,58,61,66,72,78],c:'#ff6b6b'}],yMax:80,yStep:20,type:'bar'}}]});
+  await quiz([
+    {t:'Платим льготу — договор есть договор',ok:false,fx:{budget:-15,happy:-3},title:'Заплатили за подкрутку',why:'Среднее упало, а часов с опасным воздухом стало больше. Дети дышат пиками, а не средним.'},
+    {t:'Комбинат стал сбрасывать реже, но большими порциями: среднее падает, пиков больше. Добавляем вторую метрику — часы выше нормы — и платим льготу только по обеим',ok:true,fx:{trust:4,happy:2},flag:'filters',react:['irina','Хорошо. Ставим фильтры на пиковые цеха в этом квартале.','neutral'],title:'Поймали подкрутку метрики',why:'Одна метрика — одна лазейка. Две метрики, которые сложно улучшить одновременно обманом, делают договор честным.',lesson:'Любую одиночную метрику можно «оптимизировать» в ущерб сути. Защищай главную метрику дополнительными, которые ловят обходные пути.'},
+    {t:'Расторгаем договор и идём в суд',ok:false,fx:{trust:-5,budget:-8},title:'Слишком резко',why:'Договор работал, его нужно было уточнить, а не разрывать. Суд снова затянется на годы.'}
+  ],{ach:'guardrail'});}
+];
+
+/* ---------- SCENARIO C ---------- */
+SCEN.C.chapters=[
+async()=>{head('Очередь на 2,5 часа',1,.4);add(el('div','',sceneQueue()));
+  await narr('Новоград, 85 000 жителей. Очередь в МФЦ — 2,5 часа. Люди занимают её с семи утра.');
+  await say('gromov','Сделаем суперприложение «Новоград.Всё» — 120 городских услуг за год! Подрядчик готов, 60 миллионов.','happy');
+  await say('max','За год 120 услуг мы сделаем только плохо. Давайте сначала поймём, с чем люди приходят.');
+  bars('С чем приходят в МФЦ','доля визитов за год',[['Справки и выписки',31],['Запись к врачу',22],['Оплата ЖКХ',14],['Парковочные разрешения',9],['Регистрация',6],['Остальные 115 услуг',18]],0);await sleep(900);
+  await quiz([
+    {t:'120 услуг сразу: жители должны получить всё в одном месте',ok:false,flag:'superapp',fx:{budget:-30,trust:-3},title:'Всё и плохо',why:'Через год готовы 120 услуг, половина работает с ошибками, оценка в магазине — 2,1. Очередь почти не изменилась.'},
+    {t:'MVP на 4 услугах, которые дают 76% визитов: справки, запись к врачу, ЖКХ и парковка — за 3 месяца',ok:true,fx:{trust:5},react:['gromov','Четыре услуги? Курам на смех...','angry'],title:'Минимум, который решает',why:'Четыре услуги закрывают три четверти очереди. Можно запустить быстро, проверить и расширять по данным.',lesson:'MVP — не «недоделанный продукт», а минимальный набор, который решает главную проблему и позволяет быстро учиться. Ищи 20% функций, дающих 80% ценности.'},
+    {t:'Нанять 10 новых операторов в МФЦ',ok:'mid',fx:{budget:-8},title:'Лечим симптом',why:'Очередь сократилась до 1,5 часа, но это 8 млн в год навсегда, а с ростом города очередь вернётся.'},
+    {t:'Начать с самых сложных услуг вроде регистрации бизнеса — показать технологичность',ok:false,title:'Сложно и редко',why:'Регистрация бизнеса — меньше 1% визитов. Вы потратите полгода на то, что не сократит очередь.'}
+  ],{ach:'mvp'});},
+async()=>{head('Метрика успеха',3,.55);
+  await say('gromov','Предлагаю KPI для команды Макса: 50 000 скачиваний к концу года. Красиво и понятно!','happy');
+  await quiz([
+    {t:'Число скачиваний приложения',ok:false,flag:'downloadsKPI',title:'Скачать — не значит решить',why:'Скачивание ничего не говорит о том, решил ли человек свой вопрос без похода в МФЦ.'},
+    {t:'Месячная аудитория (MAU)',ok:'mid',title:'Лучше, но мимо',why:'Человек может открыть приложение и всё равно пойти в МФЦ. Аудитория — не ценность.'},
+    {t:'Доля обращений, решённых онлайн без визита в МФЦ',ok:true,title:'Метрика ценности',why:'Она растёт, только когда человек реально решил свой вопрос онлайн, и напрямую связана с очередью.',lesson:'North Star описывает момент, когда пользователь получил ценность, а не просто взаимодействовал с продуктом.'},
+    {t:'Средняя оценка в магазине приложений',ok:false,title:'Оценку легко накрутить',why:'Оценку ставят немногие и обычно на эмоциях. По ней не понять, сократилась ли очередь.'}
+  ],{ach:'star'});
+  if(S.flags.downloadsKPI){await say('dana','Прошло два месяца. Скачиваний — 41 000. Но 60% из них — сотрудники бюджетных учреждений, которых обязали установить приложение. Онлайн решено 4% обращений.','sad');
+    apply({trust:-4},'bad');S.lessons.push({tag:'Метрики',text:'Закон Гудхарта: когда метрика становится целью, её начинают выполнять любой ценой — даже бессмысленной.'});guard();
+    await say('max','Давайте всё-таки мерить долю обращений, решённых онлайн. Скачивания пусть будут вспомогательной метрикой.');}
+  await mgChips({title:'Какие сигналы говорят, что приложение решает проблему?',sub:'отметьте пустышки',yes:'Пустышка',no:'Сигнал ценности',items:[{t:'Число скачиваний',v:true},{t:'Доля заявок, доведённых до результата',v:false},{t:'Время от заявки до готовой справки',v:false},{t:'Число push-уведомлений',v:true},{t:'Длина очереди в МФЦ',v:false},{t:'Количество экранов в приложении',v:true}],
+    why:'Сигналы ценности показывают, что человек получил результат быстрее. Пустышки растут от активности команды.',lesson:'Хорошая метрика продукта описывает результат пользователя: быстрее, проще, без визита. Плохая — описывает активность команды.'});},
+async()=>{head('Где теряются пользователи',5,.5);add(el('div','',sceneApp()));
+  await say('max','Приложение запустили. Вот воронка первого месяца. Где главный провал?');
+  await mgFunnel({title:'Воронка нового пользователя',sub:'первый месяц',steps:[['Скачали приложение',10000],['Открыли',8600],['Начали регистрацию',7900],['Подтвердили личность',3100],['Подали первую заявку',2700]],ans:3,
+    okTitle:'Провал на подтверждении личности',why:'61% тех, кто начал регистрацию, не смогли подтвердить личность. Все остальные шаги теряют до 14%.',lesson:'Ищи шаг с самым большим относительным провалом. Именно там самое дешёвое улучшение.'});
+  await say('max','Подтверждение — через портал госуслуг с логином и паролем. Есть четыре идеи. Какую проверим первой?');
+  await quiz([
+    {t:'Перерисуем дизайн экрана — он скучный',ok:false,title:'Дизайн тут ни при чём',why:'Люди уходят не из-за вида экрана, а потому что не могут пройти шаг.'},
+    {t:'Многие не помнят пароль от портала. Для простых услуг (запись к врачу, ЖКХ) хватит входа по SMS, а подтверждение личности запросим только для справок',ok:true,title:'Убираем трение до ценности',why:'Человек сначала получает пользу, а сложный шаг встречает тогда, когда без него не обойтись.',lesson:'Не ставь самый сложный шаг перед первой ценностью. Запрашивай у пользователя только то, что нужно для текущего действия.'},
+    {t:'Добавим в регистрацию видеоинструкцию на 4 минуты',ok:'mid',title:'Помогает немногим',why:'Видео не вернёт забытый пароль, а 4 минуты — ещё один повод уйти.'},
+    {t:'Дадим 500 бонусных рублей за регистрацию',ok:false,fx:{budget:-6},title:'Купили не тех',why:'Пришли охотники за бонусами, удержание новых пользователей упало. Проблема с паролем осталась.'}
+  ]);},
+async()=>{head('Тест входа по SMS',7,.6);
+  await say('dana','Месяц A/B-теста. Вариант B — вход по SMS для простых услуг. Смотрите внимательно: метрик несколько.');
+  table('Результаты теста','по 4 000 новых пользователей в каждой группе',`<table class="dt"><tr><th>Метрика</th><th>A (как было)</th><th>B (SMS)</th></tr><tr><td>Завершили регистрацию</td><td>39%</td><td class="up"><b>62%</b></td></tr><tr><td>Подали первую заявку</td><td>34%</td><td class="up"><b>55%</b></td></tr><tr><td>Подтвердили личность</td><td>100%</td><td class="dn"><b>41%</b></td></tr><tr><td>Заказали справку</td><td>18%</td><td class="dn"><b>10%</b></td></tr></table>`);
+  await quiz([
+    {t:'B победил по главной метрике — выкатываем как есть',ok:'mid',title:'Не заметили потерю',why:'Справки — самая частая услуга. В варианте B их стали заказывать почти вдвое реже: людей просто не довели до подтверждения.'},
+    {t:'Оставляем SMS-вход, а подтверждение личности предлагаем в момент заказа справки — с понятным объяснением, зачем оно нужно',ok:true,flag:'smsOk',fx:{happy:4,pop:600},title:'Компромисс по данным',why:'Простые услуги стали доступнее, а справки вернулись: человек подтверждает личность, когда это действительно нужно.',lesson:'Результат теста — это несколько метрик. Смотри и на главную, и на побочные: улучшение одной может скрывать потерю другой.'},
+    {t:'Оставляем A — безопасность важнее',ok:false,title:'Безопасность не пострадала',why:'Для записи к врачу подтверждение личности не требуется. Вы оставили барьер, который никого не защищает.'}
+  ],{ach:'tradeoff'});},
+async()=>{head('Удержание',10,.7);
+  await say('gromov','Тревога! В июле месячная аудитория упала на 9%. Провал! Срочно запускаем рекламу на 10 миллионов.','angry');
+  await say('dana','Давайте посмотрим на когорты: какая доля пользователей каждого месяца продолжает пользоваться приложением.');
+  const rows=[['Март (до SMS)',[100,38,27,25,24]],['Апрель',[100,40,29,27,26]],['Май (SMS-вход)',[100,51,42,40]],['Июнь',[100,53,44]]];
+  const cell=v=>`<td class="c" style="background:rgba(255,181,71,${(v/100*.7).toFixed(2)});color:${v>60?'#1c1204':'#eef2f7'}">${v}%</td>`;
+  table('Когорты: доля активных по месяцам','месяц 0 — месяц регистрации',`<table class="dt heat"><tr><th>Когорта</th><th>М0</th><th>М1</th><th>М2</th><th>М3</th><th>М4</th></tr>${rows.map(r=>`<tr><td>${r[0]}</td>${r[1].map(cell).join('')}${'<td></td>'.repeat(5-r[1].length)}</tr>`).join('')}</table>`);
+  await quiz([
+    {t:'Это провал: аудитория падает, нужна реклама',ok:false,fx:{budget:-10},title:'Лечите не то',why:'Реклама привела новых людей, но июльский спад был сезонным и в августе прошёл сам.'},
+    {t:'Каждая новая когорта удерживается лучше, удержание стабилизируется после второго месяца. Июльский спад — сезонный: отпуска, меньше справок. Сравним с июлем прошлого года по МФЦ',ok:true,react:['dana','Сравнила: в прошлом июле визитов в МФЦ было меньше на 11%. Это сезон.','happy'],title:'Прочитали когорты',why:'После SMS-входа удержание на 2-м месяце выросло с 27% до 42%. Продукт становится лучше, а общая цифра колеблется по сезону.',lesson:'Общая аудитория смешивает новых и старых пользователей и сезонность. Когорты показывают, становится ли продукт лучше для каждого нового поколения пользователей.'},
+    {t:'Нужно смотреть только на скачивания — они растут',ok:false,title:'Снова пустышка',why:'Скачивания растут всегда, если есть реклама. Они не говорят, остаются ли люди.'}
+  ],{ach:'cohort',hint:'Сравните строки между собой: как меняется второй месяц у новых когорт?'});},
+async()=>{head('Цифровой разрыв',12,.5);
+  await say('nina','Онлайн решено уже 46% обращений. Громов предлагает закрыть МФЦ и сэкономить 25 млн в год.','sad');
+  await say('dana','Но среди жителей 65+ — а это 24% города — приложением пользуются только 7%.');
+  await quiz([
+    {t:'Закрываем МФЦ полностью: будущее за цифрой',ok:false,fatal:{title:'Пенсионеры перекрыли проспект',why:'Через месяц после закрытия МФЦ 2 000 пенсионеров вышли на проспект Мира: люди не могли записаться к врачу и оформить субсидии. Горсовет отправил вас в отставку.',lesson:'Средний успех цифрового сервиса может скрывать сегмент, которому он не подходит. Не отключай старый канал, пока новый не работает для всех ключевых групп.'}},
+    {t:'Сокращаем окна пропорционально падению очереди, а часть операторов делаем «цифровыми помощниками», которые помогают оформить заявку онлайн',ok:true,flag:'mfcOk',fx:{budget:8,happy:3},react:['nina','Мои девочки научат любую бабушку. Это я вам обещаю.','happy'],title:'Сегмент не брошен',why:'Экономия 8 млн в год, а доля пожилых в онлайне выросла с 7% до 26% за полгода.',lesson:'Переход на новый канал — это работа с каждым сегментом отдельно. Тем, кому сложно, нужен мост, а не закрытая дверь.'},
+    {t:'Оставляем всё как есть',ok:'mid',fx:{budget:-5},title:'Тихие расходы',why:'МФЦ наполовину пустой, а 25 млн в год продолжают уходить на пустые окна.'}
+  ],{ach:'segment'});},
+async()=>{head('Утечка',15,.92);
+  await narr('Пятница, 23:10. Ольга из «Новоград.Онлайн» пишет: в открытом доступе таблица с телефонами и адресами 3 200 пользователей приложения. Она даёт мэрии час на комментарий.');
+  await say('olga','Мне нужен ваш комментарий до полуночи. Я в любом случае публикую.','neutral');
+  await mgCrisis({seconds:20,posts:[['Ольга','У нас таблица с данными 3 200 пользователей «Новоград.Онлайн». Ждём комментарий мэрии.','—'],['Пользователь','Мне сегодня звонили «из банка» и знали мой адрес...','640'],['Макс','Уязвимость нашли, закрываем, нужно 4 часа.','—']],
+    opts:[
+      {t:'Промолчать: тихо закрыть уязвимость за ночь, а журналистке ответить «информация не подтверждается»',ok:false,fatal:{title:'Сокрытие утечки',why:'Утром Ольга опубликовала таблицу и ваш ответ «не подтверждается». Прокуратура начала проверку, приложение удалили 30 000 человек. Горсовет отправил вас в отставку.',lesson:'В кризисе доверия молчание и отрицание дороже правды. Признай проблему, расскажи, что делаешь, и защити пострадавших.'}},
+      {t:'Подтвердить утечку, закрыть уязвимость, за 24 часа уведомить каждого пострадавшего и пригласить внешний аудит',ok:true,fx:{trust:5},title:'Правда и действия',why:'Удалили приложение 4% пользователей вместо возможных 35%. Ольга написала, что «мэрия впервые не стала врать».'},
+      {t:'Публично обвинить подрядчика и разорвать с ним контракт',ok:false,fx:{trust:-6},title:'Поиск виноватых',why:'Подрядчик в ответ показал переписку: о проблеме он писал мэрии ещё весной.'}],
+    timeout:{ok:false,fx:{trust:-8,happy:-3},title:'Мэрия промолчала',why:'Статья вышла с фразой «мэрия не ответила». Это выглядело как попытка скрыть.'},
+    lesson:'В кризисе скорость и честность важнее идеальной формулировки. Сообщи, что произошло, что делаешь и как защищаешь пострадавших.'});},
+async()=>{head('Цена парковки',18,.6);
+  await say('dana','В центре 98% парковочных мест заняты весь день, люди кружат по 15 минут. Мы провели пилот: подняли цену с 50 до 100 ₽ в час на 3 месяца.');
+  table('Пилот платной парковки','3 месяца',`<table class="dt"><tr><th>Метрика</th><th>До</th><th>После</th></tr><tr><td>Занятость мест</td><td>98%</td><td class="up"><b>83%</b></td></tr><tr><td>Время поиска места</td><td>15 мин</td><td class="up"><b>4 мин</b></td></tr><tr><td>Выручка, в месяц</td><td>2,1 млн</td><td class="up"><b>3,4 млн</b></td></tr><tr><td>Машины во дворах вокруг центра</td><td>—</td><td class="dn"><b>+14%</b></td></tr><tr><td>Жалобы жильцов</td><td>40</td><td class="dn"><b>120</b></td></tr></table>`);
+  await quiz([
+    {t:'Поднимаем до 200 ₽: выручка ещё вырастет',ok:false,fx:{happy:-4},title:'Цель была не в выручке',why:'Цель — свободные места и меньше кружения. Она уже достигнута, а рост цены выдавит ещё больше машин во дворы.'},
+    {t:'Цена достигла цели — около 85% занятости. Но машины ушли во дворы: оставляем 100 ₽ и вводим резидентные разрешения для дворов, следим за жалобами',ok:true,fx:{happy:3,budget:6},title:'Цель и её цена',why:'Через месяц машин во дворах стало меньше, жалобы вернулись к прежнему уровню, а время поиска места осталось 4 минуты.',lesson:'Определи цель изменения заранее и не путай её с побочными выгодами. Следи за побочными эффектами — они переезжают в соседние места.'},
+    {t:'Возвращаем 50 ₽ — жалобы же',ok:false,fx:{happy:-2},title:'Потеряли эффект',why:'Через неделю в центре снова 98% занятости и 15 минут кружения.'},
+    {t:'Делаем парковку бесплатной для жителей города',ok:false,fx:{budget:-8,happy:-2},title:'Обратный эффект',why:'Бесплатная парковка заполнилась за час. Кружение вернулось, а город потерял выручку.'}
+  ],{ach:'guardrail'});},
+async()=>{head('Бюджет на год',20,.62);
+  await say('max',`Осталось ${S.budget} млн. Какие проекты берём в следующем году? Посчитайте RICE.`);
+  await mgRice([
+    {k:'medrec',n:'Онлайн-запись во все поликлиники',d:'22% визитов в МФЦ.',R:30000,I:2,C:.8,E:3,cost:18,fx:{happy:5,pop:800}},
+    {k:'ai',n:'Чат-бот на нейросети для всех вопросов',d:'Модно, но непонятно, что решит.',R:20000,I:1,C:.3,E:6,cost:30,fx:{happy:1}},
+    {k:'helpers',n:'Цифровые помощники в МФЦ',d:'Для жителей 65+.',R:9000,I:2,C:.8,E:2,cost:10,fx:{happy:3,trust:2}},
+    {k:'access',n:'Крупный шрифт и голосовой режим',d:'Доступность для пожилых.',R:12000,I:1,C:.7,E:2,cost:8,fx:{happy:2}},
+    {k:'lights',n:'«Умные» светофоры',d:'Проект подрядчика без данных.',R:25000,I:.5,C:.4,E:9,cost:45,fx:{happy:1}},
+    {k:'payments',n:'Оплата штрафов и налогов',d:'Частый запрос в поддержку.',R:22000,I:1,C:.8,E:4,cost:15,fx:{happy:3,budget:2}}
+  ]);}
+];
+
+/* =============== ELECTION / FINAL / GAME OVER =============== */
+async function election(){const c=SCEN[S.scen];S.ci=c.chapters.length;head('Ночь выборов',24,.95);renderDots();
+  const acc=S.total?S.correct/S.total*100:50;
+  const ap=clamp(12+S.happy*.4+S.trust*.22+(S.pop/S.pop0-1)*150+(acc-50)*.16,20,84);
+  await say('gromov',ap>=50?'Я выдвинулся против вас, мэр. Но, честно говоря, кое-что у вас получилось.':'Я выдвинулся против вас, мэр. Город устал от ваших таблиц!',ap>=50?'neutral':'happy');
+  await narr('Избирательные участки закрыты. Идёт подсчёт голосов по районам…');
+  card(`<div class="race"><div class="cand"><div class="ava">${faceSvg(MAYORS[S.av],'neutral')}</div><div><small>Мэр ${esc(S.name)}</small><div class="tr"><i id="rA" style="background:var(--green)"></i></div></div><b id="rAv">0%</b></div>
+    <div class="cand"><div class="ava">${faceSvg(P.gromov.f,'neutral')}</div><div><small>Громов</small><div class="tr"><i id="rB" style="background:var(--red)"></i></div></div><b id="rBv">0%</b></div><div class="cap" id="rD">Подсчитано районов: 0 из 5</div></div>`);
+  let sum=0;for(let i=0;i<5;i++){await sleep(900);const sh=i===4?(S.flags[c.special]?6:-16):[3,1,-2,2,0][i];const a=clamp(ap+sh,10,90);sum+=a;const avg=sum/(i+1);
+    $('#rA').style.width=avg+'%';$('#rB').style.width=(100-avg)+'%';$('#rAv').textContent=Math.round(avg)+'%';$('#rBv').textContent=Math.round(100-avg)+'%';
+    $('#rD').textContent=`Подсчитано районов: ${i+1} из 5 · ${c.districts[i]}: ${Math.round(a)}% за мэра`;Sound.sfx('tap');}
+  S.final=sum/5;await sleep(700);}
+function cta(){return `<div class="cta"><span class="tag">Skill Route · школа продактов</span><h3>Принимайте такие решения не в игре, а в реальном продукте</h3><p>Метрики, интервью, гипотезы, A/B-тесты и приоритизация — база профессии продакт-менеджера. В Skill Route её разбирают на живых кейсах с практиками, а в конце у вас портфолио и понятный путь в профессию.</p><div class="row"><a class="btn" href="https://t.me/skillroute1_bot" target="_blank" rel="noopener">Записаться на курс</a><a class="btn ghost" href="https://t.me/product_vibe_it" target="_blank" rel="noopener">Telegram-канал</a><a class="btn ghost" href="https://instagram.com/skill.route" target="_blank" rel="noopener">Instagram</a></div><p style="font-size:13.5px">Напишите боту @skillroute1_bot «Привет» — расскажем про программу и подберём поток.</p></div>`;}
+function statsHtml(){const acc=S.total?Math.round(S.correct/S.total*100):0;return `<div class="statgrid"><div class="cmp"><small>Уровень</small><div><b>${LEVELS[levelOf(S.xp)].n}</b></div></div><div class="cmp"><small>Решения по данным</small><div><b>${acc}%</b> · ${S.xp} XP</div></div><div class="cmp"><small>Лучшая серия</small><div><b>×${S.bestStreak}</b></div></div><div class="cmp"><small>Жители</small><div>${fmt(S.pop0)} → <b>${fmt(S.pop)}</b></div></div><div class="cmp"><small>Счастье</small><div><b>${Math.round(S.happy)}%</b></div></div><div class="cmp"><small>Доверие</small><div><b>${Math.round(S.trust)}</b></div></div></div>`;}
+function lessonsHtml(){if(!S.lessons.length)return'';return `<h3>Что вы прокачали</h3><div class="lessons">${S.lessons.map(l=>`<div><small>${l.tag}</small><span>${l.text}</span></div>`).join('')}</div>`;}
+async function finale(){const c=SCEN[S.scen];const v=S.final,win=v>=50;clearStage();$('#pSub').textContent='Итог срока';
+  const E=v>=62?['Триумф: второй срок',`${c.city} уверенно проголосовал за вас — ${Math.round(v)}%. Люди остаются в городе, решения работают, а Громов попросился к Дане в стажёры.`]
+    :v>=50?['Второй срок — впритык',`${Math.round(v)}% — победа, но с минимальным запасом. Город стал лучше, однако несколько решений стоили вам доверия.`]
+    :v>=42?['Проигрыш во втором туре',`${Math.round(v)}% — не хватило совсем немного. Громов победил с лозунгом «Без таблиц». Но вы знаете, где ошиблись.`]
+    :['Город выбрал Громова',`${Math.round(v)}% — ${c.city} выбрал Громова. Первым указом он заказал второе колесо обозрения. Пройдите ещё раз и дайте слово данным.`];
+  track('finish',{votes:clamp(Math.round(v),0,100),outcome:E[0]});
+  if(win){achieve('reelected');city.fireworks(12);city.good(true);Sound.sfx('lvl');}else{city.bad();Sound.sfx('over');}
+  try{const k='mayor-best-'+S.scen,pv=parseInt(localStorage.getItem(k)||'-1',10);if(Math.round(v)>pv)localStorage.setItem(k,String(Math.round(v)));}catch(e){}
+  const f=el('div','final');
+  f.innerHTML=`<div class="ending ${win?'':'lose'}"><div class="row2"><div class="ava">${faceSvg(win?MAYORS[S.av]:P.gromov.f,'happy')}</div><div><span class="tag ${win?'':'r'}">Концовка · ${c.city}</span><h2 style="margin-top:6px">${E[0]}</h2></div></div><p>${E[1]}</p></div>
+    ${statsHtml()}<h3>Достижения: ${S.ach.length}</h3><div class="badges">${S.ach.map(id=>`<div class="badge">${badgeSvg(id)}<div><b>${ACH[id][0]}</b><small>${ACH[id][1]}</small></div></div>`).join('')||'<p class="cap">Пока ни одного — в следующий раз получится.</p>'}</div>${lessonsHtml()}${cta()}`;
+  const r=el('div','row');const again=el('button','btn big','Сыграть другой город');again.onclick=()=>boot();const same=el('button','btn ghost big','Этот город заново');same.onclick=()=>startScenario(S.scen,S.name,S.av);r.append(again,same);f.appendChild(r);add(f);stage.scrollTop=0;}
+async function gameOverScreen(r){city.bad();city.flash();Sound.sfx('over');clearStage();$('#pSub').textContent='Гейм-овер';
+  const g=el('div','gover');g.innerHTML=`<span class="tag r">Срок окончен досрочно</span><div class="big">Гейм-овер</div><h2>${r.title}</h2><p style="color:#d5dce6">${r.why}</p>${r.lesson?`<div class="lesson"><span>Урок продакта</span><p>${r.lesson}</p></div>`:''}${statsHtml()}`;add(g);
+  return new Promise(res=>{const row=el('div','row');const a=el('button','btn big','Переиграть главу');a.onclick=()=>res('retry');const b=el('button','btn ghost big','Выбрать другой город');b.onclick=()=>res('menu');row.append(a,b);add(row);add(el('div','',cta()));});}
+
+/* =============== MENU / RUN =============== */
+function scenIcon(id){const c={A:['#e6a26e','#3a4a6a','#ffd27a'],B:['#8a9aa6','#3a4a3a','#c9b47a'],C:['#6aa8ff','#22324a','#9fe0ff']}[id];
+  return `<svg viewBox="0 0 54 54"><defs>${grad('si'+id,c[0],c[1])}</defs><rect width="54" height="54" fill="url(#si${id})"/>${id==='B'?'<rect x="8" y="18" width="5" height="22" fill="#2a3036"/><rect x="16" y="24" width="5" height="16" fill="#2a3036"/><circle cx="11" cy="14" r="5" fill="rgba(200,200,190,.6)"/>':''}${id==='C'?'<rect x="25" y="8" width="3" height="32" fill="#1a2232"/><ellipse cx="26.5" cy="20" rx="5" ry="2.5" fill="#1a2232"/><circle cx="26.5" cy="7" r="1.6" fill="#ff5050"/>':''}
+  ${[[4,30,8],[13,24,9],[23,32,7],[31,20,10],[42,28,9]].map(b=>`<rect x="${b[0]}" y="${b[1]}" width="${b[2]}" height="${40-b[1]}" fill="rgba(15,20,32,.75)"/>`).join('')}<rect y="40" width="54" height="14" fill="rgba(10,20,36,.8)"/><rect y="40" width="54" height="1.5" fill="${c[2]}" opacity=".7"/></svg>`;}
+async function boot(){S=null;renderHud();renderDots();city.setup({seed:11,land:'none'});city.sky(.74,{});clearStage();
+  $('#pTitle').textContent='Мэр на данных';$('#pSub').textContent='Квест для будущих продактов';$('#cityName').textContent='Мэр на данных';$('#citySub').textContent='Выберите город';
+  $('#lvlTxt').textContent='Стажёр · 0 XP';$('#lvlBar').style.width='0%';$('#streak').dataset.n=0;$('#streakTxt').textContent='×0';
+  let av=0,sc=null;
+  const box=el('div','intro');
+  box.innerHTML=`<span class="tag">Skill Route · квест для продактов</span><h1>Мэр на <span>данных</span></h1>
+    <p class="lede">Вас избрали мэром. Впереди 24 месяца, команда с громкими мнениями и выборы в финале. Принимайте решения как продакт-менеджер: через метрики, интервью, гипотезы и эксперименты. Одно неверное решение может закончить срок досрочно.</p>
+    <div class="field"><label for="nm">Как вас зовут?</label><div class="inrow"><input id="nm" maxlength="16" autocomplete="given-name" placeholder="Введите имя" enterkeyhint="next"></div><div class="err" id="nmErr"></div></div>
+    <div class="field"><label for="ct">Email или ник в Telegram</label><div class="inrow"><input id="ct" maxlength="80" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="anna@mail.ru или @anna_pm" enterkeyhint="done"></div><div class="err" id="ctErr"></div><div class="cap">Пришлём ваш результат и разбор ошибок. Нажимая «Вступить в должность», вы соглашаетесь, что Skill Route может написать вам по этому контакту.</div></div>
+    <div class="field"><label>Ваш портрет</label><div class="avatars" id="avs"></div></div>
+    <div class="field"><label>Выберите город</label><div class="scens" id="scs"></div></div>
+    <div class="rules"><b>Гейм-овер</b>, если доверие команды упадёт до 10, счастье жителей — до 15%, бюджет уйдёт в минус, население сократится на 10% — или если вы примете решение, после которого мэром не остаются.</div>`;
+  stage.appendChild(box);
+  const avs=box.querySelector('#avs');MAYORS.forEach((m,i)=>{const b=el('button','avbtn',faceSvg(m,'happy'));b.setAttribute('aria-pressed',i===0?'true':'false');b.setAttribute('aria-label','Портрет '+(i+1));b.onclick=()=>{av=i;Sound.sfx('tap');[...avs.children].forEach((c,k)=>c.setAttribute('aria-pressed',k===i?'true':'false'));};avs.appendChild(b);});
+  const scs=box.querySelector('#scs');
+  ['A','B','C'].forEach(id=>{const c=SCEN[id];let best=null;try{best=localStorage.getItem('mayor-best-'+id);}catch(e){}
+    const b=el('button','scen',`<span class="ic">${scenIcon(id)}</span><span><b>${c.city}: ${c.title.toLowerCase()}</b><small>${c.desc}</small><span class="lv">${c.level} · ${c.chapters.length} глав${best?` · рекорд ${best}%`:''}</span></span>`);
+    b.setAttribute('aria-pressed','false');b.onclick=()=>{sc=id;Sound.sfx('tap');[...scs.children].forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));city.setup(c.city3);upd();};scs.appendChild(b);});
+  const go=el('button','btn big','Вступить в должность');go.disabled=true;stage.appendChild(go);stage.scrollTop=0;
+  const inp=box.querySelector('#nm'),err=box.querySelector('#nmErr'),ct=box.querySelector('#ct'),cerr=box.querySelector('#ctErr');
+  try{const sv=JSON.parse(localStorage.getItem('mayor-player')||'null');if(sv){inp.value=sv.name||'';ct.value=sv.raw||'';}}catch(e){}
+  const upd=()=>{go.disabled=!(inp.value.trim()&&ct.value.trim()&&sc);};upd();
+  inp.addEventListener('input',()=>{err.textContent='';upd();});ct.addEventListener('input',()=>{cerr.textContent='';upd();});
+  const check=()=>{if(!inp.value.trim()){err.textContent='Введите имя, чтобы продолжить';inp.focus();return false;}
+    if(!parseContact(ct.value)){cerr.textContent='Введите email (anna@mail.ru) или ник в Telegram (@anna_pm, от 5 символов)';ct.focus();return false;}
+    if(!sc){cerr.textContent='Теперь выберите город ниже';scs.scrollIntoView({behavior:'smooth',block:'nearest'});return false;}return true;};
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(!inp.value.trim()){err.textContent='Введите имя, чтобы продолжить';return;}ct.focus();}});
+  ct.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();if(check())go.click();}});
+  if(!isMobile())setTimeout(()=>(inp.value?ct:inp).focus(),300);
+  await new Promise(r=>go.onclick=()=>{if(check())r();});
+  const pc=parseContact(ct.value);PLAYER={name:inp.value.trim(),c:pc.c,t:pc.t};
+  try{localStorage.setItem('mayor-player',JSON.stringify({name:PLAYER.name,raw:ct.value.trim()}));}catch(e){}
+  Sound.start();syncSound();startScenario(sc,PLAYER.name,av);}
+function parseContact(v){v=(v||'').trim();if(!v)return null;
+  if(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v))return{c:v.toLowerCase(),t:'email'};
+  const m=v.match(/^(?:https?:\/\/)?(?:t\.me|telegram\.me)\/([A-Za-z0-9_]{5,32})\/?$/i)||v.match(/^@?([A-Za-z0-9_]{5,32})$/);
+  return m?{c:'@'+m[1],t:'telegram'}:null;}
+const SB_URL='https://hhqrdyriaochkisegseh.supabase.co/rest/v1/mayor_game_events';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocXJkeXJpYW9jaGtpc2Vnc2VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3ODI1ODMsImV4cCI6MjA5MDM1ODU4M30.SrTyAkWRMWdjecs2JcjooUxfBuWLgc2QyA5bMWtT8Iw';
+let PLAYER=null,SESSION='';
+function track(event,extra){if(!PLAYER)return;
+  const body=Object.assign({session_id:SESSION,event,player_name:PLAYER.name.slice(0,40),contact:PLAYER.c.slice(0,120),contact_type:PLAYER.t,scenario:S?S.scen:null,chapter:S?clamp(S.ci,0,30):0,xp:S?clamp(S.xp,0,5000):0,accuracy:S&&S.total?clamp(Math.round(S.correct/S.total*100),0,100):0},extra||{});
+  try{fetch(SB_URL,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(body),keepalive:true}).catch(()=>{});}catch(e){}}
+let runId=0;
+async function startScenario(sc,name,av){const my=++runId;S=fresh(sc);S.name=name;S.av=av;city.setup(SCEN[sc].city3);$('#pTitle').textContent=`${SCEN[sc].city} · ${SCEN[sc].title}`;renderHud();renderDots();
+  SESSION=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2,12));track('start');
+  const chs=SCEN[sc].chapters;let i=0;
+  while(i<chs.length){const cp=JSON.parse(JSON.stringify(S));
+    try{S.ci=i;await chs[i]();if(my!==runId)return;i++;}
+    catch(e){if(!(e instanceof GameOver))throw e;if(my!==runId)return;track('gameover',{outcome:String(e.r.title).slice(0,120)});const act=await gameOverScreen(e.r);if(act==='retry'){S=cp;S.ci=i;renderHud();continue;}boot();return;}}
+  await election();if(my!==runId)return;await finale();}
+boot();
+})();
+</script>
+</body>
+</html>
