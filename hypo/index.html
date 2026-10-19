@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Гипотеза или нет? — квест Skill Route</title>
+<meta name="description" content="Игра для продакт-менеджеров: научитесь отличать гипотезу от идеи и наблюдения на примере котокафе «Мурчим».">
+<meta property="og:title" content="Гипотеза или нет? — игра Skill Route">
+<meta property="og:description" content="Котокафе «Мурчим», кот Пирожок и сотня идей. Отличите наблюдение от идеи и соберите настоящую продуктовую гипотезу.">
+<meta name="theme-color" content="#f4efe6">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23ff48b0'/%3E%3Cpath d='M24 14h16M28 14v14L16 50h32L36 28V14' fill='none' stroke='%231c1a3a' stroke-width='5' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Onest:wght@400;500;600;700;800&display=swap">
+<style>
+:root{
+  --paper:#f4efe6;--paper2:#ebe3d4;--ink:#1c1a3a;--muted:#5d5875;
+  --pink:#ff48b0;--blue:#0078bf;--yellow:#ffe800;--green:#00a95c;--orange:#ff6c2f;--red:#e8352c;
+  --fd:'Dela Gothic One','Arial Black',sans-serif;--f:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --obs:var(--blue);--idea:var(--yellow);--hyp:var(--pink);
+}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{margin:0;min-height:100vh;color:var(--ink);font-family:var(--f);font-size:16px;line-height:1.55;font-weight:500;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;
+  background:var(--paper);background-image:radial-gradient(rgba(28,26,58,.09) 1px,transparent 1.2px);background-size:7px 7px}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.33;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .1 0 0 0 0 .2 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+svg{max-width:100%}
+h1,h2,h3{margin:0;font-family:var(--fd);font-weight:400;line-height:1.05;text-wrap:balance}
+p{margin:0}
+.mis{text-shadow:3px 2px 0 rgba(255,72,176,.75),-2px -1px 0 rgba(0,120,191,.55)}
+
+.top{position:sticky;top:0;z-index:20;background:rgba(244,239,230,.92);backdrop-filter:blur(6px);border-bottom:2px solid var(--ink)}
+.topIn{max-width:780px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:calc(8px + env(safe-area-inset-top,0px)) 16px 8px}
+.logo{display:flex;align-items:center;gap:8px;font-family:var(--fd);font-size:15px;white-space:nowrap}
+.logo i{width:28px;height:28px;border-radius:50%;background:var(--pink);display:grid;place-items:center;font-style:normal;border:2px solid var(--ink)}
+.logo i svg{width:15px;height:15px}
+.sp{flex:1}
+.pill{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 10px;border:2px solid var(--ink);border-radius:999px;background:#fff;font-weight:800;font-size:13.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pill small{font-weight:600;color:var(--muted);font-size:11.5px}
+.hearts{display:inline-flex;gap:2px}
+.hearts svg{width:20px;height:20px}
+.hearts .off{opacity:.18;filter:grayscale(1)}
+.snd{cursor:pointer}
+.snd[aria-pressed="false"]{opacity:.5}
+.sr{text-decoration:none;color:var(--ink)}
+@media (max-width:560px){.logo span,.sr,.pill small{display:none}.topIn{gap:6px;padding-left:12px;padding-right:12px}.pill{height:30px;padding:0 8px;font-size:12.5px}}
+
+.prog{max-width:780px;margin:0 auto;display:flex;gap:5px;padding:0 16px 8px}
+.prog span{flex:1;height:6px;border-radius:3px;background:rgba(28,26,58,.12)}
+.prog span.done{background:var(--ink)}.prog span.now{background:var(--pink)}
+
+#app{max-width:780px;margin:0 auto;padding:22px 16px 80px;display:flex;flex-direction:column;gap:18px}
+#app>*{animation:rise .45s cubic-bezier(.2,1.2,.4,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.kicker{align-self:flex-start;font-weight:800;font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;background:var(--ink);color:var(--yellow);padding:4px 10px;transform:rotate(-1.5deg)}
+.hero h1{font-size:clamp(44px,9.5vw,86px);letter-spacing:-.01em}
+.hero h1 em{font-style:normal;color:var(--pink);mix-blend-mode:multiply}
+.lede{font-size:18px;max-width:58ch}
+.block{background:#fffdf8;border:2px solid var(--ink);border-radius:4px;padding:16px;position:relative}
+.block.shade{box-shadow:6px 6px 0 rgba(28,26,58,.85)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 22px;border:2px solid var(--ink);border-radius:999px;background:var(--ink);color:var(--paper);font-family:var(--fd);font-size:16px;text-decoration:none;transition:transform .1s,background .15s}
+.btn:hover:not(:disabled){transform:translateY(-2px)}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.pink{background:var(--pink);color:var(--ink)}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.big{min-height:56px;font-size:18px;padding:0 28px}
+
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:800;font-size:15px}
+.field input{font:inherit;font-weight:700;font-size:18px;height:54px;padding:0 16px;border:2px solid var(--ink);border-radius:4px;background:#fff;color:var(--ink)}
+.field input:focus{outline:none;background:#fffbd6;box-shadow:4px 4px 0 var(--pink)}
+.field input::placeholder{color:#a8a2b8;font-weight:500}
+.err{color:var(--red);font-weight:700;font-size:13.5px;min-height:18px}
+.cap{font-size:13px;color:var(--muted);font-weight:500}
+
+/* cat */
+.catRow{display:flex;gap:12px;align-items:flex-end}
+.cat{flex:0 0 76px;width:76px;height:76px}
+.cat svg{width:100%;height:100%;display:block}
+.say{flex:1;background:#fff;border:2px solid var(--ink);border-radius:18px 18px 18px 4px;padding:11px 15px;font-size:16px;font-weight:600;position:relative}
+.say b{display:block;font-family:var(--fd);font-weight:400;font-size:13px;color:var(--pink);margin-bottom:2px;letter-spacing:.02em}
+
+/* three kinds */
+.kinds{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:700px){.kinds{grid-template-columns:1fr}}
+.kind{border:2px solid var(--ink);border-radius:4px;padding:14px;background:#fffdf8;display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden}
+.kind::before{content:"";position:absolute;right:-30px;top:-30px;width:110px;height:110px;border-radius:50%;background:radial-gradient(var(--c) 1.6px,transparent 1.8px);background-size:7px 7px;opacity:.55}
+.kind .ic{width:46px;height:46px;border-radius:50%;background:var(--c);border:2px solid var(--ink);display:grid;place-items:center;position:relative}
+.kind .ic svg{width:24px;height:24px}
+.kind h3{font-size:22px;position:relative}
+.kind p{font-size:14.5px;position:relative}
+.kind .ex{font-size:14px;font-weight:700;background:var(--paper);border-left:4px solid var(--c);padding:7px 10px;position:relative}
+.kind .q{font-size:12.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);position:relative}
+.formula{font-family:var(--fd);font-size:clamp(17px,2.6vw,22px);line-height:1.5}
+.formula span{padding:0 6px;border-radius:3px;white-space:nowrap}
+.f1{background:rgba(255,232,0,.85)}.f2{background:rgba(0,120,191,.22)}.f3{background:rgba(255,72,176,.35)}.f4{background:rgba(0,169,92,.28)}
+
+/* card sorting */
+.rhead{display:flex;flex-direction:column;gap:8px}
+.rhead h2{font-size:clamp(30px,5.5vw,46px)}
+.ctr{font-weight:800;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.ticket{position:relative;background:#fffdf8;border:2px solid var(--ink);border-radius:6px;padding:22px 22px 24px;min-height:170px;display:flex;flex-direction:column;gap:10px;transform:rotate(-.6deg);box-shadow:7px 7px 0 rgba(28,26,58,.85);transition:transform .3s}
+.ticket::before,.ticket::after{content:"";position:absolute;top:50%;width:22px;height:22px;margin-top:-11px;border-radius:50%;background:var(--paper);border:2px solid var(--ink)}
+.ticket::before{left:-12px;clip-path:inset(0 0 0 50%)}.ticket::after{right:-12px;clip-path:inset(0 50% 0 0)}
+.ticket .who{font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.ticket .t{font-size:clamp(19px,3vw,24px);font-weight:700;line-height:1.35}
+.ticket.fly{animation:fly .5s cubic-bezier(.2,1.3,.4,1) both}
+@keyframes fly{from{opacity:0;transform:translateX(60px) rotate(6deg)}to{opacity:1;transform:rotate(-.6deg)}}
+.stamp{position:absolute;right:14px;bottom:10px;font-family:var(--fd);font-size:clamp(18px,3vw,24px);padding:4px 12px;border:4px solid currentColor;border-radius:6px;transform:rotate(-12deg) scale(1);opacity:.88;mix-blend-mode:multiply;animation:stamp .35s cubic-bezier(.3,1.6,.5,1) both;letter-spacing:.03em;background:rgba(255,255,255,.2)}
+@keyframes stamp{from{transform:rotate(-12deg) scale(2.4);opacity:0}to{transform:rotate(-12deg) scale(1);opacity:.88}}
+.stamp.obs{color:var(--blue)}.stamp.idea{color:#c9a400}.stamp.hyp{color:var(--pink)}
+.bins{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.bin{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 6px 12px;border:2px solid var(--ink);border-radius:6px;background:#fffdf8;font-family:var(--fd);font-size:clamp(13px,2.4vw,17px);transition:transform .1s,background .15s;position:relative}
+.bin .ic{width:50px;height:50px;border-radius:50%;background:var(--c);border:2px solid var(--ink);display:grid;place-items:center}
+.bin .ic svg{width:26px;height:26px}
+.bin kbd{position:absolute;top:6px;left:8px;font-family:var(--f);font-weight:800;font-size:11px;color:var(--muted)}
+.bin:hover:not(:disabled){transform:translateY(-3px);background:#fff}
+.bin:disabled{cursor:default;opacity:.55}
+.bin.right{opacity:1;background:#e2f7ea;box-shadow:inset 0 0 0 3px var(--green)}
+.bin.wrong{opacity:1;background:#fde4e2;box-shadow:inset 0 0 0 3px var(--red);animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.fb{border:2px solid var(--ink);border-radius:4px;padding:14px 16px;background:#fff;display:flex;flex-direction:column;gap:8px}
+.fb.ok{background:#e9f9ef}.fb.bad{background:#fdebea}
+.fb h3{font-size:20px}
+.fb p{font-size:15.5px}
+.why{font-size:14.5px;background:rgba(255,232,0,.35);padding:8px 10px;border-radius:3px}
+
+/* builder */
+.obsCard{border:2px dashed var(--blue);background:rgba(0,120,191,.06);border-radius:4px;padding:12px 14px;font-weight:600}
+.obsCard b{color:var(--blue)}
+.preview{font-size:18px;font-weight:600;line-height:1.7;background:#fffdf8;border:2px solid var(--ink);border-radius:4px;padding:14px 16px}
+.preview .w{padding:1px 6px;border-radius:3px;background:rgba(255,72,176,.28)}
+.preview .w.e{background:rgba(28,26,58,.08);color:#9a94ab}
+.slot{display:flex;flex-direction:column;gap:7px}
+.slot>b{font-weight:800;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.ch{border:2px solid var(--ink);background:#fff;border-radius:999px;padding:7px 14px;font-weight:700;font-size:14.5px;text-align:left}
+.ch[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.ch.good{background:#d8f5e3;color:var(--ink)}.ch.badp{background:#fbd9d6;color:var(--ink);text-decoration:line-through}
+.ch:disabled{cursor:default}
+
+/* options */
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;gap:12px;align-items:center;text-align:left;width:100%;background:#fff;border:2px solid var(--ink);border-radius:6px;padding:12px 14px;font-weight:600;font-size:15.5px;line-height:1.4;transition:transform .1s}
+.opt:hover:not(:disabled){transform:translateX(4px);background:#fffbd6}
+.opt:disabled{cursor:default;opacity:.55}
+.opt .k{flex:0 0 30px;height:30px;border-radius:50%;border:2px solid var(--ink);display:grid;place-items:center;font-family:var(--fd);font-size:14px;background:var(--yellow)}
+.opt.ok{opacity:1;background:#e2f7ea}.opt.ok .k{background:var(--green);color:#fff}
+.opt.bad{opacity:1;background:#fde4e2}.opt.bad .k{background:var(--red);color:#fff}
+.opt.right{opacity:1;outline:3px dashed var(--green);outline-offset:-5px}
+.weak{font-size:clamp(18px,2.8vw,21px);font-weight:700;line-height:1.4}
+
+/* boss */
+.timer{display:flex;align-items:center;gap:12px;font-family:var(--fd);font-size:28px;font-variant-numeric:tabular-nums}
+.tbar{flex:1;height:14px;border:2px solid var(--ink);border-radius:999px;overflow:hidden;background:#fff}
+.tbar i{display:block;height:100%;background:var(--pink);transition:width .25s linear}
+.combo{font-family:var(--fd);font-size:20px;color:var(--pink)}
+.flashOk{animation:fok .35s}.flashBad{animation:fbad .35s}
+@keyframes fok{50%{box-shadow:7px 7px 0 var(--green)}}
+@keyframes fbad{50%{box-shadow:7px 7px 0 var(--red);transform:rotate(-.6deg) translateX(6px)}}
+
+/* final */
+.rank{background:var(--ink);color:var(--paper);border-radius:4px;padding:22px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
+.rank::after{content:"";position:absolute;right:-40px;bottom:-40px;width:200px;height:200px;border-radius:50%;background:radial-gradient(var(--pink) 2px,transparent 2.3px);background-size:9px 9px;opacity:.7}
+.rank h2{font-size:clamp(28px,5vw,44px);color:var(--yellow);position:relative}
+.rank p{position:relative}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{border:2px solid var(--ink);border-radius:4px;background:#fffdf8;padding:10px 12px}
+.stat small{display:block;font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.stat b{font-family:var(--fd);font-weight:400;font-size:26px}
+.cheat{display:flex;flex-direction:column;gap:12px}
+.cta{background:var(--pink);border:2px solid var(--ink);border-radius:4px;padding:20px;display:flex;flex-direction:column;gap:12px;box-shadow:7px 7px 0 var(--ink)}
+.cta h3{font-size:clamp(22px,3.6vw,30px)}
+.cta .btn.ghost{background:#fff}
+.gover h1{font-size:clamp(48px,10vw,90px);color:var(--red)}
+.toast{position:fixed;left:50%;top:76px;transform:translateX(-50%);z-index:30;background:var(--ink);color:var(--paper);border-radius:999px;padding:9px 18px;font-weight:800;font-size:14.5px;animation:tin 2.4s ease both;pointer-events:none;white-space:nowrap}
+@keyframes tin{0%{opacity:0;transform:translate(-50%,-10px)}12%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+.conf{position:fixed;top:-20px;width:10px;height:14px;z-index:40;pointer-events:none;animation:fall linear forwards;mix-blend-mode:multiply}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="topIn">
+    <div class="logo"><i><svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-6 11h16l-6-11V3" fill="none" stroke="#1c1a3a" stroke-width="2.4" stroke-linejoin="round"/></svg></i><span>Гипотеза или нет?</span></div>
+    <span class="sp"></span>
+    <span class="pill" id="scoreP"><b id="score">0</b><small>очков</small></span>
+    <span class="pill hearts" id="hearts" aria-label="Жизни"></span>
+    <button class="pill snd" id="snd" aria-pressed="true" aria-label="Музыка">♪</button>
+    <a class="pill sr" href="https://t.me/skillroute1_bot" target="_blank" rel="noopener">Skill Route</a>
+  </div>
+  <div class="prog" id="prog"></div>
+</header>
+<main id="app" aria-live="polite"></main>
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s),app=$('#app');
+const AT=location.search.includes('autotest');const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep=ms=>new Promise(r=>setTimeout(r,reduce?0:ms));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function el(t,c,h){const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;}
+function add(n){app.appendChild(n);return n;}
+function clear(){app.innerHTML='';scrollTo({top:0,behavior:'auto'});}
+function into(n){requestAnimationFrame(()=>{const r=n.getBoundingClientRect();if(r.bottom>innerHeight-10||r.top<70)scrollBy({top:r.top-90,behavior:reduce?'auto':'smooth'});});}
+function wait(btn){return new Promise(r=>btn.onclick=()=>{btn.disabled=true;Sound.sfx('tap');r();});}
+
+/* ---------- sound: оригинальная лёгкая мелодия ---------- */
+const Sound=(()=>{let ac=null,mg,sg,on=true,timer=null,step=0,nextT=0;
+  try{on=localStorage.getItem('hypo-sound')!=='off';}catch(e){}
+  const mf=m=>440*Math.pow(2,(m-69)/12),BEAT=.2;
+  const MEL=[72,0,76,79,0,76,74,0, 72,0,74,76,0,72,69,0, 67,0,69,72,0,74,76,0, 74,0,72,74,0,0,0,0];
+  const MEL2=[72,0,76,79,0,81,79,0, 77,0,76,74,0,72,74,0, 76,0,74,72,0,69,67,0, 69,0,71,72,0,0,0,0];
+  const BASS=[48,55,52,55, 45,52,48,52, 41,48,45,48, 43,50,47,50];
+  function init(){if(ac)return;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;ac=new AC();const m=ac.createGain();m.gain.value=.8;m.connect(ac.destination);mg=ac.createGain();mg.gain.value=0;mg.connect(m);sg=ac.createGain();sg.connect(m);}
+  function note(f,t0,d,v,type,dest){const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(v,t0+.01);g.gain.exponentialRampToValueAtTime(.0001,t0+d);o.connect(g);g.connect(dest);o.start(t0);o.stop(t0+d+.05);}
+  function sched(){if(!ac||!on)return;while(nextT<ac.currentTime+.3){const i=step%64,ph=i<32?MEL:MEL2,m=ph[i%32];
+      if(m){note(mf(m),nextT,.32,.045,'sine',mg);note(mf(m+12),nextT,.12,.012,'triangle',mg);}
+      if(i%2===0)note(mf(BASS[(i>>1)%16]),nextT,.34,.05,'triangle',mg);
+      if(i%4===2){const s=ac.createBufferSource(),b=ac.createBuffer(1,ac.sampleRate*.03,ac.sampleRate),d=b.getChannelData(0);for(let k=0;k<d.length;k++)d[k]=(Math.random()*2-1)*(1-k/d.length);s.buffer=b;const hp=ac.createBiquadFilter();hp.type='highpass';hp.frequency.value=6000;const g=ac.createGain();g.gain.value=.03;s.connect(hp);hp.connect(g);g.connect(mg);s.start(nextT);}
+      step++;nextT+=BEAT;}}
+  function start(){init();if(!ac)return;if(ac.state==='suspended')ac.resume();if(!on)return;mg.gain.cancelScheduledValues(ac.currentTime);mg.gain.linearRampToValueAtTime(1,ac.currentTime+.8);if(!timer){nextT=ac.currentTime+.1;timer=setInterval(sched,80);}}
+  function stop(){if(!ac)return;mg.gain.linearRampToValueAtTime(0,ac.currentTime+.3);clearInterval(timer);timer=null;}
+  function toggle(){on=!on;try{localStorage.setItem('hypo-sound',on?'on':'off');}catch(e){}on?start():stop();return on;}
+  function sfx(k){if(!ac||!on)return;const t=ac.currentTime+.01;
+    if(k==='ok'){note(mf(79),t,.12,.08,'square',sg);note(mf(84),t+.08,.2,.07,'square',sg);}
+    else if(k==='bad'){note(mf(55),t,.18,.09,'sawtooth',sg);note(mf(50),t+.12,.3,.08,'sawtooth',sg);}
+    else if(k==='stamp'){note(mf(40),t,.12,.18,'triangle',sg);}
+    else if(k==='tap'){note(mf(96),t,.04,.03,'sine',sg);}
+    else if(k==='tick'){note(mf(88),t,.03,.03,'square',sg);}
+    else if(k==='win'){[72,76,79,84,88].forEach((m,i)=>note(mf(m),t+i*.09,.3,.06,'square',sg));}}
+  document.addEventListener('visibilitychange',()=>{if(!ac)return;document.hidden?ac.suspend():on&&ac.resume();});
+  return{start,toggle,sfx,get on(){return on;}};})();
+const sb=$('#snd');const syncS=()=>{sb.setAttribute('aria-pressed',Sound.on?'true':'false');sb.textContent=Sound.on?'♪':'♪̸';};sb.onclick=e=>{Sound.toggle();syncS();};syncS();
+(()=>{const kick=e=>{if(e&&e.target&&e.target.closest&&e.target.closest('#snd'))return;if(Sound.on)Sound.start();['pointerdown','touchend','keydown','click'].forEach(t=>document.removeEventListener(t,kick,true));};['pointerdown','touchend','keydown','click'].forEach(t=>document.addEventListener(t,kick,true));})();
+
+/* ---------- art ---------- */
+const ICON={
+  obs:'<svg viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" fill="#fff" stroke="#1c1a3a" stroke-width="2"/><circle cx="12" cy="12" r="3.4" fill="#1c1a3a"/></svg>',
+  idea:'<svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-3.6 10.8V17h7.2v-3.2A6 6 0 0 0 12 3z" fill="#fff" stroke="#1c1a3a" stroke-width="2" stroke-linejoin="round"/><path d="M9.5 20.5h5" stroke="#1c1a3a" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  hyp:'<svg viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5.5 10.5A1.6 1.6 0 0 0 6 22h12a1.6 1.6 0 0 0 1.5-2.5L14 9V3" fill="#fff" stroke="#1c1a3a" stroke-width="2" stroke-linejoin="round"/><path d="M7.3 16h9.4" stroke="#1c1a3a" stroke-width="2"/><circle cx="11" cy="18.6" r="1" fill="#1c1a3a"/><circle cx="14" cy="18" r=".8" fill="#1c1a3a"/></svg>'};
+const KIND={obs:{n:'Наблюдение',c:'var(--blue)'},idea:{n:'Идея',c:'var(--yellow)'},hyp:{n:'Гипотеза',c:'var(--pink)'}};
+function cat(mood='ok'){const eyes=mood==='sad'?'<path d="M29 41q4-3 8 0M51 41q4-3 8 0" stroke="#1c1a3a" stroke-width="3" fill="none" stroke-linecap="round"/>':mood==='wow'?'<circle cx="33" cy="41" r="4.5" fill="#1c1a3a"/><circle cx="55" cy="41" r="4.5" fill="#1c1a3a"/><circle cx="34.5" cy="39.5" r="1.4" fill="#fff"/><circle cx="56.5" cy="39.5" r="1.4" fill="#fff"/>':'<path d="M29 42q4 4 8 0M51 42q4 4 8 0" stroke="#1c1a3a" stroke-width="3" fill="none" stroke-linecap="round"/>';
+  return `<svg viewBox="0 0 88 88" aria-hidden="true"><ellipse cx="46" cy="58" rx="36" ry="26" fill="#0078bf" opacity=".55" style="mix-blend-mode:multiply"/><path d="M12 56c0-18 14-30 32-30s32 12 32 30-14 24-32 24-32-6-32-24z" fill="#ff6c2f" stroke="#1c1a3a" stroke-width="3"/><path d="M18 34l2-18 14 12M70 34l-2-18-14 12" fill="#ff6c2f" stroke="#1c1a3a" stroke-width="3" stroke-linejoin="round"/><path d="M24 30l1-8 6 5M64 30l-1-8-6 5" fill="#ff48b0"/>
+  <path d="M30 60c4 3 8 3 14 0M44 60c6 3 10 3 14 0" stroke="#1c1a3a" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".5"/>${eyes}<path d="M41 49l3 3 3-3z" fill="#ff48b0" stroke="#1c1a3a" stroke-width="2" stroke-linejoin="round"/><path d="M44 52v3M40 56q4 3 8 0" stroke="#1c1a3a" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <path d="M22 50l-12-2M22 54l-12 2M66 50l12-2M66 54l12 2" stroke="#1c1a3a" stroke-width="2" stroke-linecap="round"/></svg>`;}
+const FISH=on=>`<svg viewBox="0 0 24 24" class="${on?'':'off'}"><path d="M3 12c3-5 9-6 13-2l5-3v10l-5-3c-4 4-10 3-13-2z" fill="#ff48b0" stroke="#1c1a3a" stroke-width="1.8" stroke-linejoin="round"/><circle cx="7.5" cy="11" r="1.2" fill="#1c1a3a"/></svg>`;
+async function catSay(text,mood){const r=el('div','catRow');r.innerHTML=`<div class="cat">${cat(mood)}</div><div class="say"><b>Кот Пирожок</b>${text}</div>`;add(r);into(r);await sleep(250);return r;}
+
+/* ---------- state ---------- */
+let G=null,PLAYER=null,SESSION='';
+const ROUNDS=['Теория','Раунд 1','Раунд 2','Раунд 3','Раунд 4','Раунд 5','Финал'];
+function hud(){$('#score').textContent=G?G.score:0;$('#hearts').innerHTML=[0,1,2].map(i=>FISH(G&&i<G.hearts)).join('');
+  $('#prog').innerHTML=ROUNDS.map((_,i)=>`<span class="${G&&i<G.round?'done':G&&i===G.round?'now':''}"></span>`).join('');}
+function toast(t){const e=el('div','toast',t);document.body.appendChild(e);setTimeout(()=>e.remove(),2500);}
+function confetti(n=40){if(reduce)return;const cs=['#ff48b0','#0078bf','#ffe800','#00a95c','#ff6c2f'];for(let i=0;i<n;i++){const c=el('div','conf');c.style.left=Math.random()*100+'vw';c.style.background=cs[i%5];c.style.animationDuration=(1.6+Math.random()*1.6)+'s';c.style.animationDelay=(Math.random()*.6)+'s';document.body.appendChild(c);setTimeout(()=>c.remove(),4000);}}
+class Over extends Error{}
+function hit(ok,pts=10){G.total++;if(ok){G.correct++;G.combo++;G.best=Math.max(G.best,G.combo);const bonus=G.combo>=3?5:0;G.score+=pts+bonus;Sound.sfx('ok');if(G.combo===5)toast('Серия ×5! Пирожок мурлычет');}
+  else{G.combo=0;G.hearts--;Sound.sfx('bad');}hud();}
+function checkLife(){if(G.hearts<=0)throw new Over();}
+
+/* ---------- data ---------- */
+const R1=[
+ {who:'Тамара, хозяйка кафе',t:'В субботу к нам пришли 140 гостей, а в понедельник — всего 23.',k:'obs',why:'Это факт с цифрами. Он ничего не предлагает и ничего не объясняет — просто фиксирует, что происходит.'},
+ {who:'Бариста Гоша',t:'Давайте наденем на котов маленькие шляпы!',k:'idea',why:'Что-то сделать — это идея. Неясно, какую проблему она решает, что изменится и как это проверить.'},
+ {who:'Тамара',t:'Если добавить онлайн-бронь столиков, доля гостей в будни вырастет с 20% до 30% за месяц, потому что 40% звонков в будни — вопрос «есть ли свободные места?».',k:'hyp',why:'Есть изменение (бронь), метрика (доля гостей в будни), цифры (с 20 до 30%), срок (месяц) и причина из данных (звонки). Это можно проверить — и можно ошибиться.'},
+ {who:'Кот Пирожок (через переводчика)',t:'Пирожок спит на подоконнике 18 часов в сутки.',k:'obs',why:'Чистый факт о поведении. Наблюдение не обязано быть полезным — оно просто описывает реальность.'},
+ {who:'Гость за третьим столиком',t:'А что если продавать раф со вкусом рыбки?',k:'idea',why:'«А что если…» — классический запуск идеи. Нет связи с наблюдением, метрики и срока.'},
+ {who:'SMM-щица Лера',t:'Половина гостей фотографирует котов, но почти никто не отмечает кафе в сторис.',k:'obs',why:'Это наблюдение за поведением гостей. Оно подсказывает проблему, но ещё не говорит, что с ней делать.'},
+ {who:'Лера',t:'Если на каждом столе стоит табличка с ником кафе, отметок в сторис станет вдвое больше за 2 недели, потому что гости фотографируют котов, но не знают наш аккаунт.',k:'hyp',why:'Связали наблюдение (фото без отметок) с изменением (табличка), указали метрику, цель и срок.'},
+ {who:'Инвестор дядя Боря',t:'Нам нужно мобильное приложение!',k:'idea',why:'Решение без проблемы. Зачем приложение, кому и что оно изменит — неизвестно. Это идея.'}];
+const R2=[
+ {who:'Гоша',t:'Если сделать меню красивее, гостей станет больше.',k:'idea',why:'Идея в костюме гипотезы. Есть «если… то», но «больше» — это сколько? За какой срок? Почему меню? Проверить нельзя, а значит, это идея.'},
+ {who:'Тамара',t:'Средний чек упал с 640 до 520 ₽ после того, как мы убрали комбо «кофе + пирожное».',k:'obs',why:'Это наблюдение: факт и совпадение во времени. Причина ещё не доказана — может, просто начались каникулы.'},
+ {who:'Тамара',t:'Если вернуть комбо «кофе + пирожное» за 590 ₽, средний чек вырастет с 520 до 600 ₽ за 3 недели, потому что после отмены комбо 60% гостей берут только кофе.',k:'hyp',why:'Полная гипотеза: изменение, метрика, цель, срок и причина из данных.'},
+ {who:'Лера',t:'Конкуренты из «Котофея» запустили кота-бариста.',k:'obs',why:'Факт о рынке — наблюдение. Само по себе оно не значит, что нам нужно то же самое.'},
+ {who:'Дядя Боря',t:'Сделаем как в «Котофее», только лучше!',k:'idea',why:'Копирование конкурента — идея. Неизвестно, работает ли это у них и какую нашу проблему решит.'},
+ {who:'Гоша',t:'Мы уверены, что скидка 20% увеличит выручку.',k:'idea',why:'Уверенность не делает идею гипотезой. Нет цифр, срока и причины — и кстати, скидка может выручку уменьшить.'},
+ {who:'Тамара',t:'Гости, которые погладили Пирожка, оставляют чаевые в 2 раза чаще.',k:'obs',why:'Наблюдение о связи двух вещей. Это корреляция: может, просто добрые люди чаще гладят котов и чаще оставляют чаевые.'},
+ {who:'Лера',t:'Если разрешить приходить со своим котом по средам, посещаемость в среду вырастет на 25% за месяц, потому что 34 из 100 опрошенных гостей сказали, что им не с кем оставить кота.',k:'hyp',why:'Есть изменение, метрика, цель, срок и «потому что» из опроса. Её можно проверить за месяц.'}];
+const BUILD=[
+ {obs:'По будням с 15 до 18 кафе пустует: 3 гостя в час против 20 в выходные. В опросе студенты пишут: «после пар у вас дорого».',
+  slots:[{k:'Если (что меняем)',o:[['запустим студенческий абонемент: 5 визитов за 990 ₽ по будням с 15 до 18',1],['сделаем ремонт',0],['позовём блогера-миллионника',0]]},
+   {k:'то (какая метрика)',o:[['число гостей в будни с 15 до 18',1],['кафе станет лучше',0],['количество лайков',0]]},
+   {k:'изменится (на сколько)',o:[['с 3 до 8 в час',1],['сильно вырастет',0],['до 100 в час',0]]},
+   {k:'за (срок)',o:[['4 недели',1],['когда-нибудь',0],['1 день',0]]},
+   {k:'потому что (причина)',o:[['студенты говорят, что днём для них дорого',1],['так делают все кафе',0],['Тамара так чувствует',0]]}]},
+ {obs:'Пирожок прячется под диван, когда в зале больше 15 гостей. Те, кто его не увидел, ставят 3 звезды и пишут «а где коты?».',
+  slots:[{k:'Если (что меняем)',o:[['введём сеансы по 12 гостей с бронью',1],['купим Пирожку новый диван',0],['повесим фото котов на стены',0]]},
+   {k:'то (какая метрика)',o:[['доля отзывов на 5 звёзд',1],['настроение Пирожка',0],['число подписчиков',0]]},
+   {k:'изменится (на сколько)',o:[['с 61% до 75%',1],['станет хорошей',0],['до 100%',0]]},
+   {k:'за (срок)',o:[['месяц',1],['год-два',0],['сразу',0]]},
+   {k:'потому что (причина)',o:[['кот прячется при толпе, а гости без встречи с котом недовольны',1],['гостям нравится бронь',0],['так посоветовал дядя Боря',0]]}]}];
+const FIX=[
+ {t:'Если запустить доставку, станет лучше.',o:['Нет метрики и цифр: что значит «лучше»?','Нет только срока','Всё на месте — можно проверять','Это наблюдение'],a:0,why:'«Лучше» нельзя измерить. Нужна метрика и цель: например, «выручка в будни вырастет с 30 до 40 тыс. ₽».'},
+ {t:'Если повесить гирлянды, выручка вырастет с 50 до 60 тыс. ₽ в день за месяц.',o:['Нет метрики','Нет «потому что»: на каком наблюдении это основано?','Нет срока','Всё на месте'],a:1,why:'Без причины это просто догадка с цифрами. Почему гирлянды? Что мы увидели? Без «потому что» мы не узнаем, чему научились, даже если сработает.'},
+ {t:'Если коты будут счастливы, гости тоже будут счастливы.',o:['Нет срока','Нет цифр','Это вообще не гипотеза: нет действия и измеримой метрики','Всё на месте'],a:2,why:'Мы не знаем, что делаем и как измерить «счастье». Это скорее красивая мысль. Проверить её нельзя.'},
+ {t:'Если добавить латте с котиком на пенке, продажи латте вырастут с 40 до 55 в день, потому что гости часто фотографируют напитки.',o:['Нет срока проверки','Нет метрики','Нет причины','Это идея'],a:0,why:'Без срока непонятно, когда подводить итог: через неделю? через год? Добавьте «за 3 недели».'},
+ {t:'Если поставить у входа меню с фото котов, доля прохожих, которые заходят, вырастет с 4% до 7% за 2 недели, потому что 70% прохожих смотрят на витрину, но не понимают, что это котокафе.',o:['Нет срока','Нет «потому что»','Всё на месте — можно проверять','Слишком много цифр'],a:2,why:'Идеальная гипотеза: изменение, метрика, цифры, срок и причина из наблюдения. Можно запускать тест.'}];
+const BOSS=[
+ {t:'В меню 47 позиций.',k:'obs'},{t:'Давайте продавать мерч с Пирожком!',k:'idea'},{t:'Каждый третий гость спрашивает, можно ли взять кота на руки.',k:'obs'},
+ {t:'Если сократить меню с 47 до 20 позиций, время заказа упадёт с 4 до 2 минут за месяц, потому что гости по 3 минуты выбирают у кассы.',k:'hyp'},
+ {t:'Открыть второе котокафе на Марсе.',k:'idea'},{t:'Отзывов с фото кота в 4 раза больше, чем без фото.',k:'obs'},
+ {t:'Если продавать кружки с Пирожком на кассе, выручка вырастет на 5% за месяц, потому что 30 гостей в неделю спрашивают, где купить такую кружку.',k:'hyp'},
+ {t:'Нам срочно нужен ребрендинг.',k:'idea'},{t:'Пирожок трижды уронил чашку со стола.',k:'obs'},
+ {t:'Если устроить вечер настолок по четвергам, гостей в четверг станет больше: с 40 до 70 за 4 недели, потому что 45% гостей в опросе назвали настолки любимым досугом.',k:'hyp'},
+ {t:'Пусть коты сами принимают заказы.',k:'idea'},{t:'По утрам 80% гостей берут кофе с собой.',k:'obs'}];
+
+/* ---------- screens ---------- */
+function binsEl(){const b=el('div','bins');['obs','idea','hyp'].forEach((k,i)=>{const x=el('button','bin',`<kbd>${i+1}</kbd><span class="ic" style="--c:${KIND[k].c}">${ICON[k]}</span>${KIND[k].n}`);x.dataset.k=k;b.appendChild(x);});return b;}
+function pickBin(b){return new Promise(res=>{const bs=[...b.children];const done=k=>{document.removeEventListener('keydown',kd);bs.forEach(x=>x.disabled=true);res(k);};
+  const kd=e=>{const i='123'.indexOf(e.key);if(i>-1){e.preventDefault();done(bs[i].dataset.k);}};document.addEventListener('keydown',kd);bs.forEach(x=>x.onclick=()=>done(x.dataset.k));});}
+
+async function intro(){G=null;hud();clear();
+  const h=el('section','hero',`<span class="kicker">Skill Route · игра для продактов</span>`);add(h);
+  h.style.cssText='display:flex;flex-direction:column;gap:16px';
+  h.insertAdjacentHTML('beforeend',`<h1 class="mis">Гипотеза <em>или</em> нет?</h1><p class="lede">Вы — новый продакт-менеджер котокафе «Мурчим». Каждый день хозяйка, бариста, гости и даже кот Пирожок приносят вам «гениальные гипотезы». Половина из них — идеи, а ещё часть — простые наблюдения. Научитесь их различать и соберите настоящую продуктовую гипотезу.</p>`);
+  await catSay('Мяу. Я Пирожок, главный кот. Здесь все приходят с «гипотезами». Поможете разобраться, где правда гипотеза?','wow');
+  const f=el('div','block shade');f.style.cssText='display:flex;flex-direction:column;gap:14px';
+  f.innerHTML=`<div class="field"><label for="nm">Как вас зовут?</label><input id="nm" maxlength="16" autocomplete="given-name" placeholder="Введите имя"><div class="err" id="e1"></div></div>
+   <div class="field"><label for="ct">Email или ник в Telegram</label><input id="ct" maxlength="80" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="anna@mail.ru или @anna_pm"><div class="err" id="e2"></div><div class="cap">Пришлём результат и шпаргалку. Нажимая «Начать», вы соглашаетесь, что Skill Route может написать вам по этому контакту.</div></div>
+   <div class="row"><button class="btn big pink" id="go">Начать игру</button><span class="cap">5 раундов · 10 минут · 3 рыбки-жизни на раунд</span></div>`;
+  add(f);
+  const nm=$('#nm'),ct=$('#ct');try{const sv=JSON.parse(localStorage.getItem('mayor-player')||'null');if(sv){nm.value=sv.name||'';ct.value=sv.raw||'';}}catch(e){}
+  nm.oninput=()=>$('#e1').textContent='';ct.oninput=()=>$('#e2').textContent='';
+  nm.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();ct.focus();}};ct.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('#go').click();}};
+  await new Promise(r=>$('#go').onclick=()=>{if(!nm.value.trim()){$('#e1').textContent='Введите имя, чтобы продолжить';nm.focus();return;}
+    const pc=parseContact(ct.value);if(!pc){$('#e2').textContent='Введите email (anna@mail.ru) или ник в Telegram (@anna_pm, от 5 символов)';ct.focus();return;}
+    PLAYER={name:nm.value.trim(),c:pc.c,t:pc.t};try{localStorage.setItem('mayor-player',JSON.stringify({name:PLAYER.name,raw:ct.value.trim()}));}catch(e){}r();});
+  Sound.start();syncS();
+  G={score:0,combo:0,best:0,hearts:3,round:0,correct:0,total:0};SESSION=crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2,12);track('start');
+  await run();}
+
+async function theory(){G.round=0;hud();clear();
+  add(el('div','rhead',`<span class="ctr">Перед игрой · 1 минута</span><h2 class="mis">Три зверя продакта</h2>`));
+  await catSay(`${esc(PLAYER.name)}, смотрите. Когда Тамара говорит «у меня гипотеза», это может быть что угодно из трёх.`);
+  const k=el('div','kinds');
+  k.innerHTML=[['obs','Что мы увидели?','Факт: цифра, поведение, событие. Ничего не предлагает и не объясняет — просто описывает реальность.','«В понедельник пришли 23 гостя, в субботу — 140»'],
+    ['idea','Что можно сделать?','Решение или фантазия. Может быть отличной, но пока не связана с фактами и не говорит, как проверить успех.','«Давайте устроим котам дискотеку!»'],
+    ['hyp','Что изменится и как проверить?','Проверяемое предположение: что меняем, какая метрика и на сколько сдвинется, за какой срок — и почему мы так думаем. Её можно опровергнуть.','«Если по понедельникам скидка 30% до 18:00, гостей станет с 23 до 40 за 4 недели, потому что в опросе 60% назвали цену главной причиной не приходить»']]
+   .map(([id,q,d,e])=>`<div class="kind" style="--c:${KIND[id].c}"><span class="ic">${ICON[id]}</span><span class="q">${q}</span><h3>${KIND[id].n}</h3><p>${d}</p><div class="ex">${e}</div></div>`).join('');add(k);
+  add(el('div','block',`<span class="ctr">Формула гипотезы</span><p class="formula" style="margin-top:6px"><span class="f1">Если [изменение],</span> <span class="f2">то [метрика] изменится с X до Y</span> <span class="f4">за [срок],</span> <span class="f3">потому что [наблюдение].</span></p><p class="cap" style="margin-top:10px">Проще: наблюдение — это «почему», идея — это «что сделать», а гипотеза связывает их и добавляет «как проверить».</p>`));
+  const b=add(el('button','btn big','Понятно, к первому раунду →'));into(b);await wait(b);}
+
+async function sortRound(cards,title,sub,round){G.round=round;G.hearts=3;hud();clear();
+  add(el('div','rhead',`<span class="ctr">${ROUNDS[round]}</span><h2 class="mis">${title}</h2><p>${sub}</p>`));
+  for(let i=0;i<cards.length;i++){const c=cards[i];
+    const tk=add(el('div','ticket fly',`<span class="who">Карточка ${i+1} из ${cards.length} · ${esc(c.who)}</span><div class="t">«${esc(c.t)}»</div>`));
+    const bins=add(binsEl());into(bins);if(AT)tk.dataset.k=c.k;
+    const k=await pickBin(bins);const ok=k===c.k;Sound.sfx('stamp');tk.appendChild(el('span','stamp '+k,KIND[k].n.toUpperCase()));
+    bins.querySelector(`[data-k="${c.k}"]`).classList.add('right');if(!ok)bins.querySelector(`[data-k="${k}"]`).classList.add('wrong');
+    hit(ok);const fb=add(el('div','fb '+(ok?'ok':'bad'),`<h3>${ok?'Верно! Это '+KIND[c.k].n.toLowerCase():'Нет, это '+KIND[c.k].n.toLowerCase()}</h3><p class="why">${c.why}</p>`));
+    if(G.hearts<=0){await sleep(400);throw new Over();}
+    const n=el('button','btn',i<cards.length-1?'Следующая карточка':'Итоги раунда');fb.appendChild(n);into(fb);await wait(n);
+    tk.remove();bins.remove();fb.remove();scrollTo({top:0});}
+  }
+
+async function buildRound(round){G.round=round;G.hearts=3;hud();clear();
+  add(el('div','rhead',`<span class="ctr">${ROUNDS[round]}</span><h2 class="mis">Собери гипотезу</h2><p>Наблюдение у вас уже есть. Соберите из него гипотезу: по одной детали в каждом ряду.</p>`));
+  for(let bi=0;bi<BUILD.length;bi++){const B=BUILD[bi];
+    const ob=add(el('div','obsCard',`<b>Наблюдение ${bi+1} из ${BUILD.length}:</b> ${B.obs}`));
+    const pv=add(el('div','preview'));const ch=B.slots.map(()=>null);
+    const render=()=>{const w=i=>ch[i]==null?`<span class="w e">${B.slots[i].k.replace(/ \(.*\)/,'').toLowerCase()}…</span>`:`<span class="w">${B.slots[i].o[ch[i]][0]}</span>`;
+      pv.innerHTML=`Если ${w(0)}, то ${w(1)} изменится ${w(2)} за ${w(3)}, потому что ${w(4)}.`;chk.disabled=ch.some(x=>x==null);};
+    const box=add(el('div',''));box.style.cssText='display:flex;flex-direction:column;gap:14px';const chk=el('button','btn pink','Проверить гипотезу');
+    B.slots.forEach((s,si)=>{const r=el('div','slot',`<b>${s.k}</b>`);const cs=el('div','chips');
+      const order=s.o.map((_,i)=>i).sort(()=>Math.random()-.5);
+      order.forEach(oi=>{const b=el('button','ch',s.o[oi][0]);b.dataset.i=oi;b.setAttribute('aria-pressed','false');b.onclick=()=>{Sound.sfx('tap');ch[si]=oi;[...cs.children].forEach(c=>c.setAttribute('aria-pressed',+c.dataset.i===oi?'true':'false'));render();};cs.appendChild(b);});
+      r.appendChild(cs);box.appendChild(r);s.cs=cs;});
+    box.appendChild(chk);render();into(ob);await wait(chk);
+    let right=0;B.slots.forEach((s,si)=>{[...s.cs.children].forEach(c=>{c.disabled=true;c.setAttribute('aria-pressed','false');const i=+c.dataset.i;if(s.o[i][1])c.classList.add('good');else if(i===ch[si])c.classList.add('badp');});if(s.o[ch[si]][1])right++;});
+    const ok=right>=4;G.total++;if(ok){G.correct++;G.combo++;G.best=Math.max(G.best,G.combo);G.score+=right*4;Sound.sfx('ok');}else{G.combo=0;G.hearts--;G.score+=right*2;Sound.sfx('bad');}hud();
+    const fb=add(el('div','fb '+(ok?'ok':'bad'),`<h3>${right===5?'Идеальная гипотеза!':ok?'Почти идеально: '+right+' из 5':'Пока слабовато: '+right+' из 5'}</h3><p class="why">Сильная гипотеза меняет что-то конкретное, двигает измеримую метрику на понятное число за реальный срок и опирается на наблюдение. «Станет лучше», «когда-нибудь» и «так все делают» превращают её обратно в идею.</p>`));
+    if(G.hearts<=0){await sleep(400);throw new Over();}
+    const n=el('button','btn',bi<BUILD.length-1?'Следующее наблюдение':'Дальше');fb.appendChild(n);into(fb);await wait(n);clear();
+    add(el('div','rhead',`<span class="ctr">${ROUNDS[round]}</span><h2 class="mis">Собери гипотезу</h2>`));}
+}
+
+async function fixRound(round){G.round=round;G.hearts=3;hud();clear();
+  add(el('div','rhead',`<span class="ctr">${ROUNDS[round]}</span><h2 class="mis">Почини гипотезу</h2><p>Гоша принёс пять «гипотез». Найдите, чего не хватает каждой.</p>`));
+  await catSay('Гоша старался. Правда старался. Но давайте проверим.','sad');
+  for(let i=0;i<FIX.length;i++){const F=FIX[i];
+    const tk=add(el('div','ticket fly',`<span class="who">Гипотеза ${i+1} из ${FIX.length} · от Гоши</span><div class="weak">«${esc(F.t)}»</div>`));
+    const box=add(el('div','opts'));const p=new Promise(res=>F.o.forEach((o,j)=>{const b=el('button','opt',`<span class="k">${'АБВГ'[j]}</span><span>${o}</span>`);b.onclick=()=>res(j);box.appendChild(b);}));into(box);if(AT)box.dataset.a=F.a;
+    const j=await p;[...box.children].forEach(b=>b.disabled=true);const ok=j===F.a;box.children[j].classList.add(ok?'ok':'bad');if(!ok)box.children[F.a].classList.add('right');
+    hit(ok,12);const fb=add(el('div','fb '+(ok?'ok':'bad'),`<h3>${ok?'Точно!':'Не совсем'}</h3><p class="why">${F.why}</p>`));
+    if(G.hearts<=0){await sleep(400);throw new Over();}
+    const n=el('button','btn',i<FIX.length-1?'Следующая':'К финальному раунду');fb.appendChild(n);into(fb);await wait(n);tk.remove();box.remove();fb.remove();scrollTo({top:0});}
+}
+
+async function bossRound(round){G.round=round;G.hearts=3;hud();clear();
+  add(el('div','rhead',`<span class="ctr">${ROUNDS[round]} · скоростной</span><h2 class="mis">Час пик в «Мурчим»</h2><p>Субботнее утро: идеи сыплются со всех сторон. 60 секунд, 12 карточек. Верные ответы подряд дают бонус к очкам. Цифры 1, 2, 3 на клавиатуре тоже работают.</p>`));
+  const st=add(el('button','btn big pink','Поехали!'));await wait(st);st.remove();
+  const tm=add(el('div','timer',`<span id="tsec">60</span><div class="tbar"><i id="tbi" style="width:100%"></i></div><span class="combo" id="cmb"></span>`));
+  const deck=BOSS.slice().sort(()=>Math.random()-.5);let left=60,over=false;
+  const iv=setInterval(()=>{left--;$('#tsec').textContent=Math.max(0,left);$('#tbi').style.width=Math.max(0,left/60*100)+'%';if(left<=5&&left>0)Sound.sfx('tick');if(left<=0){over=true;clearInterval(iv);}},reduce?120:1000);
+  let i=0;
+  try{for(;i<deck.length&&!over;i++){const c=deck[i];
+    const tk=add(el('div','ticket fly',`<span class="who">${i+1} / ${deck.length}</span><div class="t">«${esc(c.t)}»</div>`));const bins=add(binsEl());if(AT)tk.dataset.k=c.k;
+    const k=await Promise.race([pickBin(bins),new Promise(r=>{const w=setInterval(()=>{if(over){clearInterval(w);r(null);}},150);})]);
+    if(k===null){tk.remove();bins.remove();break;}
+    const ok=k===c.k;hit(ok,8);tk.classList.add(ok?'flashOk':'flashBad');tk.appendChild(el('span','stamp '+c.k,KIND[c.k].n.toUpperCase()));
+    $('#cmb').textContent=G.combo>=3?'×'+G.combo+' серия':'';if(!ok){left=Math.max(0,left-3);}
+    if(G.hearts<=0){clearInterval(iv);await sleep(500);throw new Over();}
+    await sleep(ok?380:900);tk.remove();bins.remove();}}
+  finally{clearInterval(iv);}
+  const speed=Math.max(0,left);G.score+=speed;hud();
+  add(el('div','fb ok',`<h3>${i>=deck.length?'Все карточки разобраны!':'Время вышло'}</h3><p>Бонус за оставшееся время: +${speed} очков.</p>`));
+  const n=add(el('button','btn big','Узнать результат'));into(n);await wait(n);}
+
+async function finale(){G.round=6;hud();clear();const acc=G.total?Math.round(G.correct/G.total*100):0;
+  const R=acc>=90?['Главный по гипотезам','Вы отличаете гипотезу от идеи с первого взгляда. Тамара назначила вас Chief Hypothesis Officer, а Пирожок уступил вам подоконник.']
+    :acc>=75?['Гипотезолог','Уверенно различаете три зверя продакта. Иногда идея в костюме гипотезы ещё проскакивает — но вы её уже чувствуете.']
+    :acc>=55?['Генератор идей','Идеи у вас есть, но не всегда понятно, как их проверить. Ещё один заход — и вы начнёте видеть разницу сразу.']
+    :['Наблюдатель с подоконника','Пока вы скорее смотрите, как Пирожок, чем проверяете. Перечитайте шпаргалку и сыграйте ещё раз — это быстро.'];
+  track('finish',{votes:acc,outcome:R[0]});if(acc>=55){confetti(60);Sound.sfx('win');}
+  try{const pv=parseInt(localStorage.getItem('hypo-best')||'0',10);if(G.score>pv)localStorage.setItem('hypo-best',String(G.score));}catch(e){}
+  add(el('div','rank',`<span class="kicker" style="background:var(--pink);color:var(--ink)">Ваше звание</span><h2>${R[0]}</h2><p>${R[1]}</p>`));
+  add(el('div','stats',`<div class="stat"><small>Очки</small><b>${G.score}</b></div><div class="stat"><small>Точность</small><b>${acc}%</b></div><div class="stat"><small>Лучшая серия</small><b>×${G.best}</b></div>`));
+  await catSay(acc>=75?'Мур-р. Вот теперь в кафе будут проверять, а не спорить.':'Мяу. Ничего, я тоже не сразу научился открывать холодильник.',acc>=75?'wow':'ok');
+  const ch=add(el('div','block shade cheat'));ch.innerHTML=`<span class="ctr">Шпаргалка — сохраните скриншот</span>
+    <div class="kinds">${['obs','idea','hyp'].map(k=>`<div class="kind" style="--c:${KIND[k].c}"><span class="ic">${ICON[k]}</span><h3>${KIND[k].n}</h3><p>${{obs:'Факт: что мы увидели. Цифры и поведение. Ничего не предлагает.',idea:'Что можно сделать. Без связи с фактами, метрики и способа проверки.',hyp:'Если [изменение], то [метрика] с X до Y за [срок], потому что [наблюдение].'}[k]}</p></div>`).join('')}</div>
+    <p class="cap">Проверка на гипотезу: можно ли через срок честно сказать «подтвердилась» или «не подтвердилась»? Если нельзя — это идея.</p>`;
+  add(el('div','cta',`<span class="kicker">Skill Route · школа продактов</span><h3>Проверяйте гипотезы в реальном продукте, а не только в котокафе</h3><p>Гипотезы, метрики, интервью, A/B-тесты и приоритизация — база профессии продакт-менеджера. В Skill Route её разбирают на живых кейсах с практиками.</p><div class="row"><a class="btn" href="https://t.me/skillroute1_bot" target="_blank" rel="noopener">Записаться на курс</a><a class="btn ghost" href="https://t.me/product_vibe_it" target="_blank" rel="noopener">Telegram-канал</a><a class="btn ghost" href="https://instagram.com/skill.route" target="_blank" rel="noopener">Instagram</a></div><p style="font-size:14px;font-weight:600">Напишите боту @skillroute1_bot «Привет» — расскажем про программу и подберём поток.</p>`));
+  const r=add(el('div','row'));const a=el('button','btn big pink','Сыграть ещё раз');a.onclick=()=>{G={score:0,combo:0,best:0,hearts:3,round:0,correct:0,total:0};SESSION=crypto.randomUUID?crypto.randomUUID():String(Date.now());track('start');run(1);};
+  const o=el('a','btn big ghost','Другие игры');o.href='../';r.append(a,o);}
+
+async function gameOver(round){Sound.sfx('bad');clear();track('gameover',{outcome:'Закончились жизни: '+ROUNDS[round]});
+  add(el('section','gover',`<span class="kicker" style="background:var(--red);color:#fff">Рыбки закончились</span><h1 class="mis">Гейм-овер</h1><p class="lede">Три ошибки в одном раунде — и Пирожок ушёл спать. Ничего страшного: перечитайте подсказки в разборах и попробуйте раунд ещё раз.</p>`));
+  await catSay('Мяу. Помните: «станет лучше» — это не метрика, а «я уверен» — не причина.','sad');
+  return new Promise(res=>{const r=add(el('div','row'));const a=el('button','btn big pink','Переиграть раунд');a.onclick=()=>res('retry');const b=el('button','btn big ghost','С начала');b.onclick=()=>res('menu');r.append(a,b);});}
+
+async function run(skipTheory){
+  const steps=[...(skipTheory?[]:[()=>theory()]),
+    ()=>sortRound(R1,'Наблюдение, идея или гипотеза?','Первые карточки — разминка. Прочитайте и бросьте в правильную корзину.',1),
+    ()=>sortRound(R2,'Идеи в костюме гипотез','Теперь хитрее: некоторые идеи притворяются гипотезами, а наблюдения — выводами.',2),
+    ()=>buildRound(3),()=>fixRound(4),()=>bossRound(5)];
+  const save=()=>JSON.parse(JSON.stringify(G));
+  for(let i=0;i<steps.length;i++){const cp=save();try{await steps[i]();}catch(e){if(!(e instanceof Over))throw e;const r=G.round;const a=await gameOver(r);if(a==='retry'){G=cp;i--;continue;}intro();return;}}
+  await finale();}
+
+function parseContact(v){v=(v||'').trim();if(!v)return null;
+  if(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v))return{c:v.toLowerCase(),t:'email'};
+  const m=v.match(/^(?:https?:\/\/)?(?:t\.me|telegram\.me)\/([A-Za-z0-9_]{5,32})\/?$/i)||v.match(/^@?([A-Za-z0-9_]{5,32})$/);
+  return m?{c:'@'+m[1],t:'telegram'}:null;}
+const SB_URL='https://hhqrdyriaochkisegseh.supabase.co/rest/v1/mayor_game_events';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocXJkeXJpYW9jaGtpc2Vnc2VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3ODI1ODMsImV4cCI6MjA5MDM1ODU4M30.SrTyAkWRMWdjecs2JcjooUxfBuWLgc2QyA5bMWtT8Iw';
+function track(event,extra){if(!PLAYER||!G)return;
+  const body=Object.assign({game:'hypo',session_id:SESSION,event,player_name:PLAYER.name.slice(0,40),contact:PLAYER.c.slice(0,120),contact_type:PLAYER.t,scenario:null,chapter:clamp(G.round,0,30),xp:clamp(G.score,0,5000),accuracy:G.total?clamp(Math.round(G.correct/G.total*100),0,100):0},extra||{});
+  try{fetch(SB_URL,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(body),keepalive:true}).catch(()=>{});}catch(e){}}
+intro();
+})();
+</script>
+</body>
+</html>
