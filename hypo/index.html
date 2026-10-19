@@ -98,7 +98,8 @@ p{margin:0}
 .kind .ex{font-size:14px;font-weight:700;background:var(--paper);border-left:4px solid var(--c);padding:7px 10px;position:relative}
 .kind .q{font-size:12.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);position:relative}
 .formula{font-family:var(--fd);font-size:clamp(17px,2.6vw,22px);line-height:1.5}
-.formula span{padding:0 6px;border-radius:3px;white-space:nowrap}
+.formula span{padding:0 6px;border-radius:3px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.tips{display:flex;flex-direction:column;gap:8px}.tip{display:flex;gap:12px;align-items:center;background:#fff;border:2px solid var(--ink);border-radius:6px;padding:10px 14px;font-size:15px;line-height:1.4}.tip .k{flex:0 0 30px;height:30px;border-radius:50%;border:2px solid var(--ink);display:grid;place-items:center;font-family:var(--fd);font-size:14px;background:var(--yellow)}
 .f1{background:rgba(255,232,0,.85)}.f2{background:rgba(0,120,191,.22)}.f3{background:rgba(255,72,176,.35)}.f4{background:rgba(0,169,92,.28)}
 
 /* card sorting */
@@ -178,6 +179,10 @@ p{margin:0}
 .cta{background:var(--pink);border:2px solid var(--ink);border-radius:4px;padding:20px;display:flex;flex-direction:column;gap:12px;box-shadow:7px 7px 0 var(--ink)}
 .cta h3{font-size:clamp(22px,3.6vw,30px)}
 .cta .btn.ghost{background:#fff}
+.lvls{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media (max-width:560px){.lvls{grid-template-columns:1fr}}
+.lv{text-align:left;border:2px solid var(--ink);border-radius:6px;background:#fff;padding:12px 14px;display:flex;flex-direction:column;gap:4px;transition:transform .1s}
+.lv b{font-family:var(--fd);font-weight:400;font-size:17px}.lv span{font-size:13.5px;color:var(--muted);font-weight:600;line-height:1.4}
+.lv[aria-pressed="true"]{background:var(--ink);color:var(--paper);box-shadow:5px 5px 0 var(--pink)}.lv[aria-pressed="true"] span{color:#cfc9e0}
 .gover h1{font-size:clamp(48px,10vw,90px);color:var(--red)}
 .toast{position:fixed;left:50%;top:76px;transform:translateX(-50%);z-index:30;background:var(--ink);color:var(--paper);border-radius:999px;padding:9px 18px;font-weight:800;font-size:14.5px;animation:tin 2.4s ease both;pointer-events:none;white-space:nowrap}
 @keyframes tin{0%{opacity:0;transform:translate(-50%,-10px)}12%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
@@ -257,7 +262,7 @@ async function catSay(text,mood){const r=el('div','catRow');r.innerHTML=`<div cl
 
 /* ---------- state ---------- */
 let G=null,PLAYER=null,SESSION='';
-const ROUNDS=['Теория','Раунд 1','Раунд 2','Раунд 3','Раунд 4','Раунд 5','Финал'];
+let ROUNDS=['Теория','Раунд 1','Раунд 2','Раунд 3','Раунд 4','Раунд 5','Финал'];
 function hud(){$('#score').textContent=G?G.score:0;$('#hearts').innerHTML=[0,1,2].map(i=>FISH(G&&i<G.hearts)).join('');
   $('#prog').innerHTML=ROUNDS.map((_,i)=>`<span class="${G&&i<G.round?'done':G&&i===G.round?'now':''}"></span>`).join('');}
 function toast(t){const e=el('div','toast',t);document.body.appendChild(e);setTimeout(()=>e.remove(),2500);}
@@ -299,7 +304,7 @@ const BUILD=[
    {k:'изменится (на сколько)',o:[['с 61% до 75%',1],['станет хорошей',0],['до 100%',0]]},
    {k:'за (срок)',o:[['месяц',1],['год-два',0],['сразу',0]]},
    {k:'потому что (причина)',o:[['кот прячется при толпе, а гости без встречи с котом недовольны',1],['гостям нравится бронь',0],['так посоветовал дядя Боря',0]]}]}];
-const FIX=[
+const FIXJ=[
  {t:'Если запустить доставку, станет лучше.',o:['Нет метрики и цифр: что значит «лучше»?','Нет только срока','Всё на месте — можно проверять','Это наблюдение'],a:0,why:'«Лучше» нельзя измерить. Нужна метрика и цель: например, «выручка в будни вырастет с 30 до 40 тыс. ₽».'},
  {t:'Если повесить гирлянды, выручка вырастет с 50 до 60 тыс. ₽ в день за месяц.',o:['Нет метрики','Нет «потому что»: на каком наблюдении это основано?','Нет срока','Всё на месте'],a:1,why:'Без причины это просто догадка с цифрами. Почему гирлянды? Что мы увидели? Без «потому что» мы не узнаем, чему научились, даже если сработает.'},
  {t:'Если коты будут счастливы, гости тоже будут счастливы.',o:['Нет срока','Нет цифр','Это вообще не гипотеза: нет действия и измеримой метрики','Всё на месте'],a:2,why:'Мы не знаем, что делаем и как измерить «счастье». Это скорее красивая мысль. Проверить её нельзя.'},
@@ -314,6 +319,64 @@ const BOSS=[
  {t:'Если устроить вечер настолок по четвергам, гостей в четверг станет больше: с 40 до 70 за 4 недели, потому что 45% гостей в опросе назвали настолки любимым досугом.',k:'hyp'},
  {t:'Пусть коты сами принимают заказы.',k:'idea'},{t:'По утрам 80% гостей берут кофе с собой.',k:'obs'}];
 
+/* ---------- senior data ---------- */
+const S1=[
+ {who:'Гоша',t:'Если поставить вторую кофемашину, очередь в 9:00 станет короче, потому что одна машина не справляется: ожидание 7 минут.',k:'idea',why:'Механизм и наблюдение есть, но нет цели в цифрах и срока. «Короче» — это на сколько и когда проверяем? Без этого нельзя сказать «не подтвердилась».'},
+ {who:'Лера',t:'Если завести TikTok с Пирожком, узнаваемость кафе вырастет с 12% до 20% за 2 месяца, потому что котики — самый вирусный контент в интернете.',k:'idea',why:'По форме всё на месте, но «потому что» — общее место, а не наше наблюдение о наших гостях. Это идея, оформленная как гипотеза.'},
+ {who:'Аналитик Вика',t:'Retention 30-го дня у гостей с абонементом — 62%, у остальных — 18%.',k:'obs',why:'Это наблюдение, и опасное. Абонемент покупают и так самые лояльные гости — это ошибка отбора. Связь есть, причинности не доказано.'},
+ {who:'Тамара',t:'Если продавать абонемент всем новым гостям на входе, retention 30-го дня вырастет до 62%.',k:'idea',why:'Похоже на гипотезу, но это идея: нет срока, а цель 62% взята из корреляции с самоотобранной группой. Механизма «почему абонемент удержит тех, кто его не хотел» нет.'},
+ {who:'Продакт Олег',t:'Мы считаем, что гости уходят, потому что после первого визита не возникает связи с конкретным котом. Будем правы, если ≥30% ушедших в интервью назовут это главной причиной, а «знакомство с котом» в тесте снизит отток 60-го дня с 45% до 38%.',k:'hyp',why:'Гипотеза о проблеме, а не только о решении. Есть механизм, критерий подтверждения качественными и количественными данными и конкретная цифра.'},
+ {who:'Лера',t:'NPS вырос с 31 до 44 после запуска программы лояльности.',k:'obs',why:'Наблюдение о совпадении во времени. В тот же месяц мог измениться состав опрошенных, сезон или сервис. Причину ещё нужно доказать.'},
+ {who:'Инвестор дядя Боря',t:'Нам нужно поднять вовлечённость гостей.',k:'idea',why:'Это цель, а не гипотеза. «Вовлечённость» не определена, нет изменения, нет метрики, нет способа проверки.'},
+ {who:'Олег',t:'Если показывать «осталось 2 места» в брони, конверсия в бронь вырастет с 9% до 12% за 3 недели теста, а доля отмен не превысит 15%. Причина: 55% посетителей страницы брони уходят, не выбрав время.',k:'hyp',why:'Сеньорская гипотеза: основная метрика, цель, срок, механизм из данных и защитная метрика (отмены), чтобы не «купить» конверсию ценой отмен.'},
+ {who:'Поддержка',t:'Пользователи хотят тёмную тему в приложении: 40 запросов за месяц.',k:'obs',why:'Факт — 40 запросов. «Пользователи хотят» — уже интерпретация: 40 из 12 000 активных — это 0,3%. Наблюдение, причём слабое.'},
+ {who:'CTO',t:'Если внедрить ИИ-ассистента для заказа, всё станет удобнее и быстрее.',k:'idea',why:'Решение в поиске проблемы. «Удобнее» не измерено, срока нет, связи с наблюдением нет.'},
+ {who:'Вика',t:'Гости, пришедшие по рекомендации друга, возвращаются в 41% случаев, остальные — в 23%.',k:'obs',why:'Наблюдение. Возможно, дело не в рекомендации, а в том, что друзья приводят похожих на себя лояльных людей.'},
+ {who:'Олег',t:'Если давать каждому гостю промокод для друга, доля повторных визитов среди приглашённых будет не ниже 35% за 8 недель, а маржа на визит не упадёт ниже 120 ₽. Основание: приглашённые возвращаются почти вдвое чаще остальных.',k:'hyp',why:'Гипотеза с порогом и защитной метрикой (маржа). Опирается на корреляцию, поэтому проверять её нужно экспериментом, а не верить наблюдению.'}];
+const SREV=[
+ {t:'Если дарить десерт за отзыв на картах, рейтинг вырастет с 4,3 до 4,7 за месяц, потому что довольные гости охотнее пишут отзывы, когда их благодарят.',o:['Нет срока: «за месяц» слишком размыто, нужен точный период теста','Цель нереалистична: рост рейтинга на 0,4 за месяц почти невозможен для кафе с историей','Изменение напрямую подкручивает метрику: рейтинг перестанет отражать качество, а платить за отзывы запрещают площадки','Изъянов нет: изменение, метрика, цифры, срок и причина на месте'],a:2,why:'Закон Гудхарта: если стимул напрямую двигает метрику, она перестаёт измерять то, ради чего её смотрели. Рейтинг вырастет, качество — нет.'},
+ {t:'Если запустить своё приложение, выручка вырастет с 1,2 до 1,5 млн ₽ в месяц за полгода, потому что 64% гостей в опросе сказали, что хотели бы заказывать с телефона.',o:['Нет защитной метрики: неизвестно, не упадёт ли средний чек у заказывающих с телефона','Метрика слишком далеко от изменения: в выручке за полгода эффект приложения утонет среди сезона, цен и погоды','Нет срока: полгода — это не срок проверки гипотезы','Цель слишком скромная для такой большой разработки'],a:1,why:'Выручку за полгода двигает всё подряд. Нужна опережающая метрика ближе к изменению: доля заказов через приложение, частота визитов пользователей приложения.'},
+ {t:'Если перекрасить кнопку брони в розовый, конверсия вырастет с 9,0% до 9,2% за неделю, потому что на тепловой карте 40% посетителей не замечают серую кнопку. Трафик страницы — 300 визитов в неделю.',o:['Нет механизма: непонятно, почему цвет повлияет на решение о брони','На таком трафике эффект +0,2 п. п. не увидеть: нужны сотни тысяч визитов, гипотеза непроверяема','Неделя — слишком короткий срок для любой гипотезы о конверсии','Изъянов нет: изменение, метрика, цифры, срок и причина указаны'],a:1,why:'Сеньор считает мощность заранее. Минимальный заметный эффект (MDE) при 300 визитах — десятки процентов, а не 0,2 п. п.'},
+ {t:'Если дать новым гостям скидку 50% на первый визит, новых гостей станет с 200 до 400 в месяц за 4 недели, потому что цена — барьер №1 в опросе 300 прохожих.',o:['Нет срока: не сказано, сколько длится акция','Нет защитных метрик: что будет с маржой и вернутся ли «скидочники» по полной цене','Цель нереалистична: удвоить поток новых гостей за 4 недели нельзя','Причина слабая: опрос прохожих — ненадёжный источник данных'],a:1,why:'Скидка почти наверняка приведёт людей. Вопрос — какой ценой. Без маржи и retention скидочников можно «успешно» потерять деньги.'},
+ {t:'Если проводить новичкам экскурсию к котам, retention 7-го дня вырастет с 30% до 36%, потому что 52% ушедших новичков в интервью сказали, что «не поняли, как общаться с котами». Смотрим 2 недели после запуска для всех гостей.',o:['Нет механизма: непонятно, почему экскурсия удержит новичков','Нет контрольной группы, а 2 недели ловят эффект новизны и сезон вместо эффекта экскурсии','Цель слишком скромная: +6 п. п. не стоят усилий команды','Изъянов нет: изменение, метрика, цифры, срок и причина указаны'],a:1,why:'Сравнение «до/после» без контроля ловит всё подряд. Нужна контрольная группа и время, чтобы прошёл эффект новизны.'},
+ {t:'Мы считаем, что предзаказ в боте для утренних гостей снизит долю ушедших из очереди с 18% до 10% за 4 недели (тест по дням недели, 2 × 1 900 гостей, MDE 4 п. п.), потому что 80% утренних гостей берут кофе с собой. Защитная метрика: ожидание гостей в зале растёт не больше чем на 1 минуту. Если эффект меньше 4 п. п. — не раскатываем.',o:['Нет механизма: непонятно, почему бот сократит очередь','Защитная метрика выбрана неверно: нужно смотреть выручку','MDE 4 п. п. слишком большой — тест бесполезен','Изъянов нет — можно запускать'],a:3,why:'Сегмент, механизм, метрика, цель, срок, мощность, защитная метрика и правило решения заранее. Так выглядит сеньорская гипотеза.'}];
+const SDEC=[
+ {t:'Тест «осталось 2 места»: конверсия в бронь 9% → 11,5% (значимо), но доля отмен выросла с 15% до 24%.',o:['Гипотеза подтверждена по основной метрике и значимо — раскатываем на всех','Основная метрика выросла, но защитная провалена — не раскатываем, считаем итог в состоявшихся визитах','Рост отмен — случайность: тест не был рассчитан на эту метрику','Тест сломан: две метрики не могут так сильно двигаться одновременно'],a:1,why:'Защитная метрика существует ровно для этого момента. Рост конверсии, съеденный отменами, — не победа.'},
+ {t:'Тест предзаказа: −2 п. п. к уходам из очереди, разница не значима. Заранее посчитанный MDE — 4 п. п.',o:['Гипотеза опровергнута: эффекта нет, тему закрываем навсегда','Эффект ≥ 4 п. п. не доказан, меньший мог быть; по правилу, заданному заранее, не раскатываем','−2 п. п. лучше нуля — раскатываем, хуже точно не будет','Продлеваем тест, пока разница не станет значимой'],a:1,why:'«Не нашли» ≠ «нет». А продлевать тест до значимости — это подглядывание, которое ломает статистику.'},
+ {t:'В целом эффекта нет. Но в срезе «новые гости» +6 п. п., а у постоянных −4 п. п. Всего вы посмотрели 14 срезов.',o:['Раскатываем на новых гостей: +6 п. п. — сильный эффект','При 14 срезах случайная «находка» вероятна — проверяем гипотезу для новых гостей отдельным тестом','Убираем постоянных из выборки и пересчитываем общий итог','Закрываем тему: в целом эффекта нет'],a:1,why:'Множественные сравнения: чем больше срезов, тем выше шанс принять шум за эффект. Срез — повод для новой гипотезы, а не вывод.'},
+ {t:'Акция «приведи друга» подтвердилась: +7 п. п. к повторным визитам. Тест шёл в декабре, перед праздниками.',o:['Эффект ненастоящий: праздники исказили результат обеих групп','Внутри теста сравнение честное, но в другой сезон эффект может отличаться — раскатываем и следим в январе–феврале','Повторяем тест пять раз подряд, пока не убедимся','Раз подтвердилось — акция работает в любой сезон'],a:1,why:'A/B-тест защищает от сезонности внутри теста, но не гарантирует такой же эффект в другой сезон. Это вопрос переносимости результата.'}];
+const SBUILD=[{obs:'Утром с 8 до 11 к нам приходят в основном офисные работники: 80% берут кофе с собой, средний чек 210 ₽. В 9:00 очередь — 7 минут, 18% гостей уходят, не дождавшись.',
+  slots:[{k:'Изменение',o:[['предзаказ кофе в Telegram-боте с выдачей без очереди',1],['расширим утреннее меню до 30 позиций',0],['посадим кота у входа',0]]},
+   {k:'Для кого',o:[['офисные гости с 8 до 11, кто берёт кофе с собой',1],['все гости кафе',0],['гости, которые любят котов',0]]},
+   {k:'Метрика и цель',o:[['доля ушедших из очереди снизится с 18% до 10%',1],['NPS станет выше',0],['годовая выручка вырастет на 30%',0]]},
+   {k:'Срок и способ',o:[['4 недели, тест по чередующимся дням',1],['1 день, сравним с прошлой неделей',0],['до конца года, без контроля',0]]},
+   {k:'Потому что',o:[['18% уходят из очереди, а 80% утренних гостей не садятся за столик',1],['у конкурентов есть бот',0],['все любят ботов',0]]},
+   {k:'Защитная метрика',o:[['время ожидания для гостей в зале вырастет не больше чем на 1 минуту',1],['число подписчиков бота',0],['не нужна',0]]}],
+  tpl:w=>`Мы считаем, что ${w(0)} для сегмента «${w(1)}»: ${w(2)} за ${w(3)}. Так думаем, потому что ${w(4)}. Защитная метрика: ${w(5)}.`}];
+const SBOSS=[
+ {t:'Если запустить программу лояльности, retention вырастет с 22% до 30% за 2 месяца, потому что так сделал «Котофей».',k:'idea'},{t:'Если давать бесплатный круассан к утреннему кофе, гости станут приходить чаще, потому что 30% жалуются, что утром голодны.',k:'idea'},
+ {t:'Средний чек у гостей с котом на коленях на 15% выше.',k:'obs'},{t:'Надо стать «кафе №1 для котоманов».',k:'idea'},
+ {t:'Если убрать 27 редких позиций из меню, время заказа упадёт с 4 до 2,5 минуты за месяц, а выручка на гостя не снизится больше чем на 3%, потому что 90% заказов — 20 позиций.',k:'hyp'},
+ {t:'После редизайна сайта брони стало на 12% больше — правда, в тот же месяц начались каникулы.',k:'obs'},
+ {t:'Если сделать бронь проще, бронировать будут чаще.',k:'idea'},
+ {t:'Мы считаем, что гостям сложно выбрать время. Подтвердим, если 5 из 8 участников юзабилити-теста застрянут на выборе слота, а показ «ближайших свободных» поднимет бронь с 9% до 11% за 3 недели.',k:'hyp'},
+ {t:'Только 4% гостей открывают меню в приложении.',k:'obs'},{t:'Давайте добавим в приложение геймификацию.',k:'idea'},
+ {t:'Если подписка «Город котов» за 990 ₽ даст 4 визита в месяц, доля гостей с 3+ визитами вырастет с 11% до 16% за 8 недель, а маржа на визит останется выше 100 ₽, потому что 60% постоянных гостей называют цену причиной редких визитов.',k:'hyp'},
+ {t:'В отзывах слово «шумно» встречается в 3 раза чаще, чем год назад.',k:'obs'},{t:'Пора выходить на рынок Дубая.',k:'idea'},
+ {t:'Конкурент «Котофей» поднял цены на 20% и не потерял гостей.',k:'obs'}];
+async function theorySenior(){G.round=0;hud();clear();
+  add(el('div','rhead',`<span class="ctr">Сложный уровень · уровень сеньора</span><h2 class="mis">Сеньор смотрит глубже</h2>`));
+  await catSay(`${esc(PLAYER.name)}, здесь «если… то… потому что» уже мало. Сеньор задаёт неудобные вопросы.`,'wow');
+  add(el('div','block',`<span class="ctr">Что проверяет сеньор</span><div class="tips" style="margin-top:10px">${[
+    ['Механизм','Почему изменение сдвинет метрику? Опора на наблюдение, а не на корреляцию с самоотобранной группой.'],
+    ['Сегмент','Для кого гипотеза? «Все гости» почти всегда означает «никто конкретно».'],
+    ['Метрика ближе к изменению','Опережающая метрика вместо годовой выручки, в которой утонет любой эффект.'],
+    ['Защитная метрика','Что не должно сломаться: маржа, отмены, удовлетворённость.'],
+    ['Проверяемость','Хватит ли трафика, чтобы увидеть эффект (MDE)? Есть ли контрольная группа?'],
+    ['Правило решения заранее','Что сделаем, если эффект подтвердится, не подтвердится или окажется меньше порога.']].map(([a,b],i)=>`<div class="tip"><span class="k">${i+1}</span><span><b>${a}.</b> ${b}</span></div>`).join('')}</div>`));
+  add(el('div','block',`<span class="ctr">Шаблон сеньора</span><p class="formula" style="margin-top:6px"><span class="f1">Мы считаем, что [изменение] для [сегмента]</span> <span class="f2">сдвинет [метрику] с X до Y</span> <span class="f4">за [срок теста],</span> <span class="f3">потому что [наблюдение].</span> <span class="f2">Защитная метрика: [что не должно сломаться].</span></p><p class="cap" style="margin-top:10px">Три корзины те же: наблюдение, идея, гипотеза. Но если не хватает срока, цифры или механизма из наших данных — это идея, даже если звучит умно. «Так сделали конкуренты» и «котики вирусные» — не механизм.</p>`));
+  const b=add(el('button','btn big','Я готов, давайте жёстче →'));into(b);await wait(b);}
+
 /* ---------- screens ---------- */
 function binsEl(){const b=el('div','bins');['obs','idea','hyp'].forEach((k,i)=>{const x=el('button','bin',`<kbd>${i+1}</kbd><span class="ic" style="--c:${KIND[k].c}">${ICON[k]}</span>${KIND[k].n}`);x.dataset.k=k;b.appendChild(x);});return b;}
 function pickBin(b){return new Promise(res=>{const bs=[...b.children];const done=k=>{document.removeEventListener('keydown',kd);bs.forEach(x=>x.disabled=true);res(k);};
@@ -327,16 +390,17 @@ async function intro(){G=null;hud();clear();
   const f=el('div','block shade');f.style.cssText='display:flex;flex-direction:column;gap:14px';
   f.innerHTML=`<div class="field"><label for="nm">Как вас зовут?</label><input id="nm" maxlength="16" autocomplete="given-name" placeholder="Введите имя"><div class="err" id="e1"></div></div>
    <div class="field"><label for="ct">Email или ник в Telegram</label><input id="ct" maxlength="80" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="anna@mail.ru или @anna_pm"><div class="err" id="e2"></div><div class="cap">Пришлём результат и шпаргалку. Нажимая «Начать», вы соглашаетесь, что Skill Route может написать вам по этому контакту.</div></div>
-   <div class="row"><button class="btn big pink" id="go">Начать игру</button><span class="cap">5 раундов · 10 минут · 3 рыбки-жизни на раунд</span></div>`;
+   <div class="field"><label>Уровень</label><div class="lvls" id="lvls"><button class="lv" data-l="junior" aria-pressed="true"><b>Базовый</b><span>Чем гипотеза отличается от идеи и наблюдения. Для старта в профессии.</span></button><button class="lv" data-l="senior" aria-pressed="false"><b>Сложный · Senior</b><span>Корреляции, закон Гудхарта, мощность теста, защитные метрики и чтение результатов.</span></button></div></div><div class="row"><button class="btn big pink" id="go">Начать игру</button><span class="cap">5 раундов · 10–15 минут · 3 рыбки-жизни на раунд</span></div>`;
   add(f);
   const nm=$('#nm'),ct=$('#ct');try{const sv=JSON.parse(localStorage.getItem('mayor-player')||'null');if(sv){nm.value=sv.name||'';ct.value=sv.raw||'';}}catch(e){}
   nm.oninput=()=>$('#e1').textContent='';ct.oninput=()=>$('#e2').textContent='';
   nm.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();ct.focus();}};ct.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('#go').click();}};
+  let lvl='junior';document.querySelectorAll('.lv').forEach(b=>b.onclick=()=>{lvl=b.dataset.l;Sound.sfx('tap');document.querySelectorAll('.lv').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));});
   await new Promise(r=>$('#go').onclick=()=>{if(!nm.value.trim()){$('#e1').textContent='Введите имя, чтобы продолжить';nm.focus();return;}
     const pc=parseContact(ct.value);if(!pc){$('#e2').textContent='Введите email (anna@mail.ru) или ник в Telegram (@anna_pm, от 5 символов)';ct.focus();return;}
     PLAYER={name:nm.value.trim(),c:pc.c,t:pc.t};try{localStorage.setItem('mayor-player',JSON.stringify({name:PLAYER.name,raw:ct.value.trim()}));}catch(e){}r();});
   Sound.start();syncS();
-  G={score:0,combo:0,best:0,hearts:3,round:0,correct:0,total:0};SESSION=crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2,12);track('start');
+  G={lvl,score:0,combo:0,best:0,hearts:3,round:0,correct:0,total:0};SESSION=crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2,12);track('start');
   await run();}
 
 async function theory(){G.round=0;hud();clear();
@@ -363,13 +427,13 @@ async function sortRound(cards,title,sub,round){G.round=round;G.hearts=3;hud();c
     tk.remove();bins.remove();fb.remove();scrollTo({top:0});}
   }
 
-async function buildRound(round){G.round=round;G.hearts=3;hud();clear();
+async function buildRound(round,SET=BUILD){const BUILD=SET;G.round=round;G.hearts=3;hud();clear();
   add(el('div','rhead',`<span class="ctr">${ROUNDS[round]}</span><h2 class="mis">Собери гипотезу</h2><p>Наблюдение у вас уже есть. Соберите из него гипотезу: по одной детали в каждом ряду.</p>`));
   for(let bi=0;bi<BUILD.length;bi++){const B=BUILD[bi];
     const ob=add(el('div','obsCard',`<b>Наблюдение ${bi+1} из ${BUILD.length}:</b> ${B.obs}`));
     const pv=add(el('div','preview'));const ch=B.slots.map(()=>null);
     const render=()=>{const w=i=>ch[i]==null?`<span class="w e">${B.slots[i].k.replace(/ \(.*\)/,'').toLowerCase()}…</span>`:`<span class="w">${B.slots[i].o[ch[i]][0]}</span>`;
-      pv.innerHTML=`Если ${w(0)}, то ${w(1)} изменится ${w(2)} за ${w(3)}, потому что ${w(4)}.`;chk.disabled=ch.some(x=>x==null);};
+      pv.innerHTML=B.tpl?B.tpl(w):`Если ${w(0)}, то ${w(1)} изменится ${w(2)} за ${w(3)}, потому что ${w(4)}.`;chk.disabled=ch.some(x=>x==null);};
     const box=add(el('div',''));box.style.cssText='display:flex;flex-direction:column;gap:14px';const chk=el('button','btn pink','Проверить гипотезу');
     B.slots.forEach((s,si)=>{const r=el('div','slot',`<b>${s.k}</b>`);const cs=el('div','chips');
       const order=s.o.map((_,i)=>i).sort(()=>Math.random()-.5);
@@ -377,31 +441,31 @@ async function buildRound(round){G.round=round;G.hearts=3;hud();clear();
       r.appendChild(cs);box.appendChild(r);s.cs=cs;});
     box.appendChild(chk);render();into(ob);await wait(chk);
     let right=0;B.slots.forEach((s,si)=>{[...s.cs.children].forEach(c=>{c.disabled=true;c.setAttribute('aria-pressed','false');const i=+c.dataset.i;if(s.o[i][1])c.classList.add('good');else if(i===ch[si])c.classList.add('badp');});if(s.o[ch[si]][1])right++;});
-    const ok=right>=4;G.total++;if(ok){G.correct++;G.combo++;G.best=Math.max(G.best,G.combo);G.score+=right*4;Sound.sfx('ok');}else{G.combo=0;G.hearts--;G.score+=right*2;Sound.sfx('bad');}hud();
-    const fb=add(el('div','fb '+(ok?'ok':'bad'),`<h3>${right===5?'Идеальная гипотеза!':ok?'Почти идеально: '+right+' из 5':'Пока слабовато: '+right+' из 5'}</h3><p class="why">Сильная гипотеза меняет что-то конкретное, двигает измеримую метрику на понятное число за реальный срок и опирается на наблюдение. «Станет лучше», «когда-нибудь» и «так все делают» превращают её обратно в идею.</p>`));
+    const NS=B.slots.length;const ok=right>=NS-1;G.total++;if(ok){G.correct++;G.combo++;G.best=Math.max(G.best,G.combo);G.score+=right*4;Sound.sfx('ok');}else{G.combo=0;G.hearts--;G.score+=right*2;Sound.sfx('bad');}hud();
+    const fb=add(el('div','fb '+(ok?'ok':'bad'),`<h3>${right===NS?'Идеальная гипотеза!':ok?'Почти идеально: '+right+' из '+NS:'Пока слабовато: '+right+' из '+NS}</h3><p class="why">Сильная гипотеза меняет что-то конкретное, двигает измеримую метрику на понятное число за реальный срок и опирается на наблюдение. «Станет лучше», «когда-нибудь» и «так все делают» превращают её обратно в идею.</p>`));
     if(G.hearts<=0){await sleep(400);throw new Over();}
     const n=el('button','btn',bi<BUILD.length-1?'Следующее наблюдение':'Дальше');fb.appendChild(n);into(fb);await wait(n);clear();
     add(el('div','rhead',`<span class="ctr">${ROUNDS[round]}</span><h2 class="mis">Собери гипотезу</h2>`));}
 }
 
-async function fixRound(round){G.round=round;G.hearts=3;hud();clear();
-  add(el('div','rhead',`<span class="ctr">${ROUNDS[round]}</span><h2 class="mis">Почини гипотезу</h2><p>Гоша принёс пять «гипотез». Найдите, чего не хватает каждой.</p>`));
-  await catSay('Гоша старался. Правда старался. Но давайте проверим.','sad');
+async function fixRound(round,FIX=FIXJ,O={}){G.round=round;G.hearts=3;hud();clear();
+  add(el('div','rhead',`<span class="ctr">${ROUNDS[round]}</span><h2 class="mis">${O.title||'Почини гипотезу'}</h2><p>${O.sub||'Гоша принёс пять «гипотез». Найдите, чего не хватает каждой.'}</p>`));
+  await catSay(O.cat||'Гоша старался. Правда старался. Но давайте проверим.','sad');
   for(let i=0;i<FIX.length;i++){const F=FIX[i];
-    const tk=add(el('div','ticket fly',`<span class="who">Гипотеза ${i+1} из ${FIX.length} · от Гоши</span><div class="weak">«${esc(F.t)}»</div>`));
-    const box=add(el('div','opts'));const p=new Promise(res=>F.o.forEach((o,j)=>{const b=el('button','opt',`<span class="k">${'АБВГ'[j]}</span><span>${o}</span>`);b.onclick=()=>res(j);box.appendChild(b);}));into(box);if(AT)box.dataset.a=F.a;
-    const j=await p;[...box.children].forEach(b=>b.disabled=true);const ok=j===F.a;box.children[j].classList.add(ok?'ok':'bad');if(!ok)box.children[F.a].classList.add('right');
+    const tk=add(el('div','ticket fly',`<span class="who">${O.who||'Гипотеза'} ${i+1} из ${FIX.length}${O.who?'':' · от Гоши'}</span><div class="weak">«${esc(F.t)}»</div>`));
+    const box=add(el('div','opts'));const ord=F.o.map((_,j)=>j).sort(()=>Math.random()-.5);const p=new Promise(res=>ord.forEach((j,pos)=>{const b=el('button','opt',`<span class="k">${'АБВГ'[pos]}</span><span>${F.o[j]}</span>`);b.onclick=()=>res(pos);box.appendChild(b);}));into(box);const ap=ord.indexOf(F.a);if(AT)box.dataset.a=ap;
+    const j=await p;[...box.children].forEach(b=>b.disabled=true);const ok=j===ap;box.children[j].classList.add(ok?'ok':'bad');if(!ok)box.children[ap].classList.add('right');
     hit(ok,12);const fb=add(el('div','fb '+(ok?'ok':'bad'),`<h3>${ok?'Точно!':'Не совсем'}</h3><p class="why">${F.why}</p>`));
     if(G.hearts<=0){await sleep(400);throw new Over();}
-    const n=el('button','btn',i<FIX.length-1?'Следующая':'К финальному раунду');fb.appendChild(n);into(fb);await wait(n);tk.remove();box.remove();fb.remove();scrollTo({top:0});}
+    const n=el('button','btn',i<FIX.length-1?'Следующая':(O.next||'К финальному раунду'));fb.appendChild(n);into(fb);await wait(n);tk.remove();box.remove();fb.remove();scrollTo({top:0});}
 }
 
-async function bossRound(round){G.round=round;G.hearts=3;hud();clear();
-  add(el('div','rhead',`<span class="ctr">${ROUNDS[round]} · скоростной</span><h2 class="mis">Час пик в «Мурчим»</h2><p>Субботнее утро: идеи сыплются со всех сторон. 60 секунд, 12 карточек. Верные ответы подряд дают бонус к очкам. Цифры 1, 2, 3 на клавиатуре тоже работают.</p>`));
+async function bossRound(round,DECK=BOSS,SEC=60){G.round=round;G.hearts=3;hud();clear();
+  add(el('div','rhead',`<span class="ctr">${ROUNDS[round]} · скоростной</span><h2 class="mis">Час пик в «Мурчим»</h2><p>Субботнее утро: идеи сыплются со всех сторон. ${SEC} секунд, ${DECK.length} карточек. Верные ответы подряд дают бонус к очкам. Цифры 1, 2, 3 на клавиатуре тоже работают.</p>`));
   const st=add(el('button','btn big pink','Поехали!'));await wait(st);st.remove();
-  const tm=add(el('div','timer',`<span id="tsec">60</span><div class="tbar"><i id="tbi" style="width:100%"></i></div><span class="combo" id="cmb"></span>`));
-  const deck=BOSS.slice().sort(()=>Math.random()-.5);let left=60,over=false;
-  const iv=setInterval(()=>{left--;$('#tsec').textContent=Math.max(0,left);$('#tbi').style.width=Math.max(0,left/60*100)+'%';if(left<=5&&left>0)Sound.sfx('tick');if(left<=0){over=true;clearInterval(iv);}},reduce?120:1000);
+  const tm=add(el('div','timer',`<span id="tsec">${SEC}</span><div class="tbar"><i id="tbi" style="width:100%"></i></div><span class="combo" id="cmb"></span>`));
+  const deck=DECK.slice().sort(()=>Math.random()-.5);let left=SEC,over=false;
+  const iv=setInterval(()=>{left--;$('#tsec').textContent=Math.max(0,left);$('#tbi').style.width=Math.max(0,left/SEC*100)+'%';if(left<=5&&left>0)Sound.sfx('tick');if(left<=0){over=true;clearInterval(iv);}},reduce?120:1000);
   let i=0;
   try{for(;i<deck.length&&!over;i++){const c=deck[i];
     const tk=add(el('div','ticket fly',`<span class="who">${i+1} / ${deck.length}</span><div class="t">«${esc(c.t)}»</div>`));const bins=add(binsEl());if(AT)tk.dataset.k=c.k;
@@ -416,12 +480,12 @@ async function bossRound(round){G.round=round;G.hearts=3;hud();clear();
   add(el('div','fb ok',`<h3>${i>=deck.length?'Все карточки разобраны!':'Время вышло'}</h3><p>Бонус за оставшееся время: +${speed} очков.</p>`));
   const n=add(el('button','btn big','Узнать результат'));into(n);await wait(n);}
 
-async function finale(){G.round=6;hud();clear();const acc=G.total?Math.round(G.correct/G.total*100):0;
-  const R=acc>=90?['Главный по гипотезам','Вы отличаете гипотезу от идеи с первого взгляда. Тамара назначила вас Chief Hypothesis Officer, а Пирожок уступил вам подоконник.']
+async function finale(){G.round=ROUNDS.length-1;hud();clear();const acc=G.total?Math.round(G.correct/G.total*100):0;
+  const R=G.lvl==='senior'?(acc>=88?['Head of Product','Вы видите ошибку отбора, Гудхарта и множественные сравнения раньше, чем их успевают показать на слайде. Сеньорский уровень подтверждён.']:acc>=72?['Senior PM','Сильный уровень: механизм, защитные метрики и правила решения для вас норма. Пара ловушек ещё проскочила — разберите их в ответах.']:acc>=55?['Middle+ PM','Формулы знаете, но сеньорские ловушки — корреляции, мощность теста, срезы — пока срабатывают. Пройдите ещё раз.']:['Junior в сложном уровне','Сеньорские ловушки пока сильнее. Попробуйте базовый уровень, а потом вернитесь сюда.']):acc>=90?['Главный по гипотезам','Вы отличаете гипотезу от идеи с первого взгляда. Тамара назначила вас Chief Hypothesis Officer, а Пирожок уступил вам подоконник.']
     :acc>=75?['Гипотезолог','Уверенно различаете три зверя продакта. Иногда идея в костюме гипотезы ещё проскакивает — но вы её уже чувствуете.']
     :acc>=55?['Генератор идей','Идеи у вас есть, но не всегда понятно, как их проверить. Ещё один заход — и вы начнёте видеть разницу сразу.']
     :['Наблюдатель с подоконника','Пока вы скорее смотрите, как Пирожок, чем проверяете. Перечитайте шпаргалку и сыграйте ещё раз — это быстро.'];
-  track('finish',{votes:acc,outcome:R[0]});if(acc>=55){confetti(60);Sound.sfx('win');}
+  track('finish',{votes:acc,outcome:(G.lvl==='senior'?'Сложный: ':'Базовый: ')+R[0]});if(acc>=55){confetti(60);Sound.sfx('win');}
   try{const pv=parseInt(localStorage.getItem('hypo-best')||'0',10);if(G.score>pv)localStorage.setItem('hypo-best',String(G.score));}catch(e){}
   add(el('div','rank',`<span class="kicker" style="background:var(--pink);color:var(--ink)">Ваше звание</span><h2>${R[0]}</h2><p>${R[1]}</p>`));
   add(el('div','stats',`<div class="stat"><small>Очки</small><b>${G.score}</b></div><div class="stat"><small>Точность</small><b>${acc}%</b></div><div class="stat"><small>Лучшая серия</small><b>×${G.best}</b></div>`));
@@ -430,8 +494,8 @@ async function finale(){G.round=6;hud();clear();const acc=G.total?Math.round(G.c
     <div class="kinds">${['obs','idea','hyp'].map(k=>`<div class="kind" style="--c:${KIND[k].c}"><span class="ic">${ICON[k]}</span><h3>${KIND[k].n}</h3><p>${{obs:'Факт: что мы увидели. Цифры и поведение. Ничего не предлагает.',idea:'Что можно сделать. Без связи с фактами, метрики и способа проверки.',hyp:'Если [изменение], то [метрика] с X до Y за [срок], потому что [наблюдение].'}[k]}</p></div>`).join('')}</div>
     <p class="cap">Проверка на гипотезу: можно ли через срок честно сказать «подтвердилась» или «не подтвердилась»? Если нельзя — это идея.</p>`;
   add(el('div','cta',`<span class="kicker">Skill Route · школа продактов</span><h3>Проверяйте гипотезы в реальном продукте, а не только в котокафе</h3><p>Гипотезы, метрики, интервью, A/B-тесты и приоритизация — база профессии продакт-менеджера. В Skill Route её разбирают на живых кейсах с практиками.</p><div class="row"><a class="btn" href="https://t.me/skillroute1_bot" target="_blank" rel="noopener">Записаться на курс</a><a class="btn ghost" href="https://t.me/product_vibe_it" target="_blank" rel="noopener">Telegram-канал</a><a class="btn ghost" href="https://instagram.com/skill.route" target="_blank" rel="noopener">Instagram</a></div><p style="font-size:14px;font-weight:600">Напишите боту @skillroute1_bot «Привет» — расскажем про программу и подберём поток.</p>`));
-  const r=add(el('div','row'));const a=el('button','btn big pink','Сыграть ещё раз');a.onclick=()=>{G={score:0,combo:0,best:0,hearts:3,round:0,correct:0,total:0};SESSION=crypto.randomUUID?crypto.randomUUID():String(Date.now());track('start');run(1);};
-  const o=el('a','btn big ghost','Другие игры');o.href='../';r.append(a,o);}
+  const r=add(el('div','row'));const a=el('button','btn big pink','Сыграть ещё раз');a.onclick=()=>{G={lvl:G.lvl,score:0,combo:0,best:0,hearts:3,round:0,correct:0,total:0};SESSION=crypto.randomUUID?crypto.randomUUID():String(Date.now());track('start');run(1);};
+  const o=el('a','btn big ghost','Другие игры');o.href='../';const lv=el('button','btn big ghost',G.lvl==='senior'?'Базовый уровень':'Сложный уровень');lv.onclick=()=>{G={lvl:G.lvl==='senior'?'junior':'senior',score:0,combo:0,best:0,hearts:3,round:0,correct:0,total:0};SESSION=crypto.randomUUID?crypto.randomUUID():String(Date.now());track('start');run();};r.append(a,lv,o);}
 
 async function gameOver(round){Sound.sfx('bad');clear();track('gameover',{outcome:'Закончились жизни: '+ROUNDS[round]});
   add(el('section','gover',`<span class="kicker" style="background:var(--red);color:#fff">Рыбки закончились</span><h1 class="mis">Гейм-овер</h1><p class="lede">Три ошибки в одном раунде — и Пирожок ушёл спать. Ничего страшного: перечитайте подсказки в разборах и попробуйте раунд ещё раз.</p>`));
@@ -439,7 +503,14 @@ async function gameOver(round){Sound.sfx('bad');clear();track('gameover',{outcom
   return new Promise(res=>{const r=add(el('div','row'));const a=el('button','btn big pink','Переиграть раунд');a.onclick=()=>res('retry');const b=el('button','btn big ghost','С начала');b.onclick=()=>res('menu');r.append(a,b);});}
 
 async function run(skipTheory){
-  const steps=[...(skipTheory?[]:[()=>theory()]),
+  const sen=G.lvl==='senior';ROUNDS=sen?['Теория','Раунд 1','Раунд 2','Раунд 3','Раунд 4','Раунд 5','Финал']:['Теория','Раунд 1','Раунд 2','Раунд 3','Раунд 4','Раунд 5','Финал'];
+  const steps=sen?[...(skipTheory?[]:[()=>theorySenior()]),
+    ()=>sortRound(S1,'Тонкие различия','Корреляции, цели, интерпретации и гипотезы о проблеме. Если не хватает срока, цифры или механизма из наших данных — это идея.',1),
+    ()=>fixRound(2,SREV,{title:'Ревью гипотез',sub:'Олег принёс гипотезы на продуктовое ревью. Найдите главный изъян каждой — как сеньор.',cat:'Тут все цифры на месте. Но цифры — не главное.',who:'Гипотеза на ревью',next:'Дальше'}),
+    ()=>buildRound(3,SBUILD),
+    ()=>fixRound(4,SDEC,{title:'Что значит результат',sub:'Тест закончился. Правильно прочитать результат так же важно, как правильно сформулировать гипотезу.',cat:'Самое сложное начинается после теста.',who:'Результат',next:'К финальному раунду'}),
+    ()=>bossRound(5,SBOSS,75)]
+   :[...(skipTheory?[]:[()=>theory()]),
     ()=>sortRound(R1,'Наблюдение, идея или гипотеза?','Первые карточки — разминка. Прочитайте и бросьте в правильную корзину.',1),
     ()=>sortRound(R2,'Идеи в костюме гипотез','Теперь хитрее: некоторые идеи притворяются гипотезами, а наблюдения — выводами.',2),
     ()=>buildRound(3),()=>fixRound(4),()=>bossRound(5)];
@@ -454,7 +525,7 @@ function parseContact(v){v=(v||'').trim();if(!v)return null;
 const SB_URL='https://hhqrdyriaochkisegseh.supabase.co/rest/v1/mayor_game_events';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocXJkeXJpYW9jaGtpc2Vnc2VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3ODI1ODMsImV4cCI6MjA5MDM1ODU4M30.SrTyAkWRMWdjecs2JcjooUxfBuWLgc2QyA5bMWtT8Iw';
 function track(event,extra){if(!PLAYER||!G)return;
-  const body=Object.assign({game:'hypo',session_id:SESSION,event,player_name:PLAYER.name.slice(0,40),contact:PLAYER.c.slice(0,120),contact_type:PLAYER.t,scenario:null,chapter:clamp(G.round,0,30),xp:clamp(G.score,0,5000),accuracy:G.total?clamp(Math.round(G.correct/G.total*100),0,100):0},extra||{});
+  const body=Object.assign({game:'hypo',session_id:SESSION,event,player_name:PLAYER.name.slice(0,40),contact:PLAYER.c.slice(0,120),contact_type:PLAYER.t,scenario:G.lvl==='senior'?'B':'A',chapter:clamp(G.round,0,30),xp:clamp(G.score,0,5000),accuracy:G.total?clamp(Math.round(G.correct/G.total*100),0,100):0},extra||{});
   try{fetch(SB_URL,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(body),keepalive:true}).catch(()=>{});}catch(e){}}
 intro();
 })();
