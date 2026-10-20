@@ -206,6 +206,16 @@ body.snow .timer{color:#f2f6ff}body.snow .tbar{background:rgba(255,255,255,.2);b
 body.snow .combo{color:#ffc46b}
 body.snow .btn.ghost{background:rgba(255,255,255,.88)}
 body.snow .intro-form{color:var(--ink)}
+.dash{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (max-width:560px){.dash{grid-template-columns:repeat(2,1fr)}}
+.dm{border:2px solid var(--ink);border-radius:8px;background:#fffdf8;padding:8px 10px;display:flex;flex-direction:column;gap:1px;position:relative}
+.dm small{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.dm b{font-family:var(--fd);font-weight:400;font-size:22px;font-variant-numeric:tabular-nums}
+.dm i{font-style:normal;font-weight:800;font-size:13px}.dm i.up{color:var(--green)}.dm i.dn{color:var(--red)}
+.fb .dash{margin-top:6px}
+body.snow #app>.hint{color:#e6ecf8;text-shadow:0 1px 10px rgba(0,0,0,.7);font-weight:600}
+body.snow .dm{background:rgba(248,250,255,.88);border-color:rgba(255,255,255,.6);backdrop-filter:blur(12px)}
+body.snow #hearts{display:none}
 .gover h1{font-size:clamp(48px,10vw,90px);color:var(--red)}
 .toast{position:fixed;left:50%;top:76px;transform:translateX(-50%);z-index:30;background:var(--ink);color:var(--paper);border-radius:999px;padding:9px 18px;font-weight:800;font-size:14.5px;animation:tin 2.4s ease both;pointer-events:none;white-space:nowrap}
 @keyframes tin{0%{opacity:0;transform:translate(-50%,-10px)}12%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
@@ -523,6 +533,134 @@ const WBOSS=[
  {t:'Если у детских садов заменить соль на гранитную крошку, жалоб родителей на испорченную обувь станет с 200 до 80 за зиму, потому что 30% жителей жалуются именно на соль.',k:'hyp'},
  {t:'Если добавить кнопку «Помогите пожилому соседу», волонтёры расчистят 1 000 подъездов за сезон, потому что в чат «Снежный патруль» уже записались 300 жителей.',k:'hyp'},
  {t:'Фёдор выиграл городской конкурс «Лучший по сугробам».',k:'obs'}];
+/* ---------- Снежный город: ветвящийся сюжет ---------- */
+const PPL={
+  vp:{n:'Валентина Петровна',r:'глава ЖКХ Сугробска',ini:'ВП',c:'#ff6c2f'},
+  mer:{n:'Мэр Морозов',r:'хочет красивый отчёт',ini:'ММ',c:'#0078bf'},
+  oleg:{n:'Олег',r:'продакт приложения',ini:'О',c:'#00a95c'},
+  vika:{n:'Вика',r:'аналитик',ini:'В',c:'#9b51e0'},
+  fed:{n:'Фёдор',r:'водитель снегоуборщика',ini:'Ф',c:'#c9a400'},
+  dep:{n:'Депутат Сугробов',r:'любит громкие идеи',ini:'ДС',c:'#e8352c'},
+  kons:{n:'Консультант из столицы',r:'берёт 20 млн за проект',ini:'К',c:'#5d5875'},
+  olga:{n:'Ольга',r:'журналистка «Сугробск.Онлайн»',ini:'О',c:'#ff48b0'},
+  sn:{n:'Снеговик Снежок',r:'ваш наставник',ini:'❄',c:'#1c1a3a'}};
+function sayP(id,text){const p=PPL[id];if(id==='sn')return catSay(text,'ok');const r=el('div','catRow');
+  r.innerHTML=`<div class="cat"><svg viewBox="0 0 88 88"><circle cx="44" cy="46" r="34" fill="${p.c}" stroke="#1c1a3a" stroke-width="3"/><text x="44" y="${p.ini.length>1?55:58}" text-anchor="middle" font-family="Dela Gothic One,Arial Black,sans-serif" font-size="${p.ini.length>1?24:32}" fill="#fff">${p.ini}</text></svg></div><div class="say"><b>${p.n} · <span style="font-family:var(--f);font-weight:600;color:var(--muted)">${p.r}</span></b>${text}</div>`;
+  add(r);into(r);return sleep(260);}
+const CITY0={complaints:1200,budget:60,trust:60,injuries:2};
+function dash(prev){const C=G.city,f=(k,u,good)=>{const d=prev?C[k]-prev[k]:0;const cls=!d?'':((d>0)===good?'up':'dn');return `<div class="dm"><small>${{complaints:'Жалоб в сутки',budget:'Бюджет зимы',trust:'Доверие мэра',injuries:'Травм за неделю'}[k]}</small><b>${C[k]}${u}</b>${d?`<i class="${cls}">${d>0?'+':''}${d}${u}</i>`:''}</div>`;};
+  return el('div','dash',f('complaints','',false)+f('budget',' млн',true)+f('trust','%',true)+f('injuries','',false));}
+function cityFx(fx){const prev=Object.assign({},G.city);for(const k in fx||{})G.city[k]=Math.max(0,G.city[k]+fx[k]);G.city.trust=Math.min(100,G.city.trust);return prev;}
+function cityCheck(){const C=G.city;
+  if(C.trust<=20)return['Мэр снял вас с проекта','Доверие мэра упало до '+C.trust+'%. Решения без данных и громкие обещания закончились: проект «Сугробск.Снег» передали другой команде.'];
+  if(C.budget<=0)return['Бюджет зимы закончился','Денег на уборку не осталось уже в середине зимы. Технику поставили на прикол, а город — в сугробы.'];
+  if(C.injuries>=12)return['Прокуратура проверяет мэрию','Травм за неделю — '+C.injuries+'. Пожилые падали у поликлиник, пока команда обсуждала, «гипотеза это или нет».'];
+  if(C.complaints>=2400)return['Город встал','Жалоб — '+C.complaints+' в сутки. Горячая линия не справляется, а сюжет о «снежном коллапсе» вышел на федеральном ТВ.'];
+  return null;}
+function sc(ok,pts){G.total++;if(ok){G.correct++;G.combo++;G.best=Math.max(G.best,G.combo);G.score+=pts+(G.combo>=3?5:0);Sound.sfx('ok');}else{G.combo=0;Sound.sfx('bad');}hud();}
+/* граф сюжета */
+const STORY={
+ start:{day:'День 1 · 06:10',title:'Ночь, которую запомнят',intro:[['sn','34 см за ночь — рекорд за 12 лет. Вы продакт приложения «Сугробск.Снег», через него жители жалуются и следят за уборкой. Каждое ваше решение меняет город. Ошибётесь в том, что перед вами — факт, идея или гипотеза, — и история пойдёт по-другому.'],['vp','У меня гипотеза! Город завалило, люди злятся: к семи утра уже 620 жалоб!']],
+  type:'classify',card:{who:'Валентина Петровна',t:'За ночь выпало 34 см снега, к 7 утра пришло 620 жалоб.',k:'obs'},
+  br:{obs:{ok:1,fx:{trust:3},res:'Верно — это наблюдение: факты и цифры. Вы не стали спорить о «гипотезе», а сразу открыли данные.',next:'data'},
+   hyp:{ok:0,fx:{complaints:300,trust:-5},res:'Вы записали факт как гипотезу и созвали штаб — «проверять, подтвердится ли». Три часа обсуждали очевидное, а жалоб стало на 300 больше.',next:'data'},
+   idea:{ok:0,fx:{complaints:200,trust:-10},res:'Вы приняли факт за идею и отправили «в бэклог». В 9:00 вышел сюжет: «Мэрия не заметила снегопад». Мэр в ярости.',next:'data'}}},
+ data:{day:'День 1 · 08:30',title:'620 жалоб на столе',intro:[['mer','Значит так. Всю технику — на центральные улицы, к мэрии и площади. Там телекамеры!'],['vika','У меня выгрузка всех жалоб с адресами и временем. Что делаем?']],
+  type:'choice',opts:[
+   {t:'Разобрать жалобы по районам, улицам и времени, прежде чем отправлять технику',ok:1,fx:{trust:2},res:'Вика разложила жалобы: 62% приходят с 7 до 9 утра, больше половины — про тротуары у остановок. Это наблюдение уже подсказывает решение.',next:'hyp1'},
+   {t:'Отправить всю технику в центр, как просит мэр: там камеры и важные гости',ok:0,fx:{complaints:400,trust:4},res:'Центр блестит, мэр доволен. Спальные районы занесло по колено: жалоб +400, автобусы встали.',next:'shovels'},
+   {t:'Срочно купить 10 тракторов: техники явно не хватает на такой снегопад',ok:0,fx:{budget:-25,complaints:300},res:'Тракторы приедут через две недели, а 25 млн уже ушли. Проблема — в том, куда едет техника, а не сколько её.',next:'shovels'}]},
+ hyp1:{day:'День 1 · 11:00',title:'Олег приносит формулировку',intro:[['oleg','Смотрите, что получилось из разбора Вики.']],
+  type:'classify',card:{who:'Олег',t:'Если начинать уборку тротуаров у остановок в 4:00 вместо 7:00, утренних жалоб станет с 620 до 350 в день за 4 снегопада, потому что 62% жалоб приходят с 7 до 9.',k:'hyp'},
+  br:{hyp:{ok:1,fx:{trust:3},res:'Да, это гипотеза: изменение, метрика, цифры, срок и причина из данных. Теперь её можно проверить.',next:'test1'},
+   obs:{ok:0,fx:{complaints:250},res:'Вы записали готовую гипотезу как наблюдение и положили в отчёт «для сведения». Никто ничего не поменял — утром снова 600+ жалоб.',next:'shovels'},
+   idea:{ok:0,fx:{complaints:200,trust:-5},res:'Вы назвали это «просто идеей» и отправили на голосование в горсовет. Совет соберётся через месяц.',next:'shovels'}}},
+ test1:{day:'День 2 · 03:40',title:'Как проверить',intro:[['vp','Бригады готовы выйти в 4 утра. Но где?']],
+  type:'choice',opts:[
+   {t:'Пилот в 3 районах с ранней уборкой и 3 похожих районах без неё для сравнения',ok:1,fx:{budget:-4},res:'Пилот запущен. Через 4 снегопада будет видно, что дало именно раннее начало, а что — погода.',next:'pilot'},
+   {t:'Сразу на весь город: зачем ждать, если гипотеза хорошая и все устали',ok:0,fx:{budget:-15},res:'Жалоб стало меньше, но снегопады тоже ослабли. Сколько дала ранняя уборка — теперь не узнать, а мэр спрашивает цифру.',next:'nocontrol'},
+   {t:'Опросить жителей, хотят ли они, чтобы тротуары чистили раньше',ok:0,fx:{complaints:150},res:'92% ответили «да, конечно». Это не проверка гипотезы: люди говорят, что хотят, а не что изменилось. Неделя потеряна.',flag:'late',next:'shovels'}]},
+ pilot:{day:'День 5 · 10:00',title:'Итоги пилота',intro:[['vika','Готово. В пилотных районах утренних жалоб стало на 38% меньше. В районах без изменений — на 12% меньше: снегопады ослабли.'],['mer','Отлично, пишу в отчёт: −38%!']],
+  type:'choice',opts:[
+   {t:'Эффект ранней уборки — около 26 п. п., разница с районами без пилота',ok:1,fx:{trust:8,complaints:-450},res:'Вы раскатили раннюю уборку на город и честно назвали эффект. Через неделю цифры по городу совпали с прогнозом — мэр впервые доверяет вашим данным.',flag:'honestPilot',next:'route'},
+   {t:'Эффект −38%: столько показали пилотные районы, так и пишем в отчёт мэру',ok:0,fx:{trust:-6,complaints:-250},res:'Мэр объявил «−38%» по телевизору. По городу вышло −24%. Ольга из «Сугробск.Онлайн» уже пишет материал о «рисованных цифрах».',flag:'overclaim',next:'route'},
+   {t:'Эффекта нет: жалоб стало меньше и там, где ничего не меняли',ok:0,fx:{complaints:250},res:'Вы закрыли работающее решение. Разница с контролем была, просто вы сравнили не то.',next:'route'}]},
+ nocontrol:{day:'День 5 · 10:00',title:'Сколько дала ранняя уборка?',intro:[['mer','Мне нужна цифра для отчёта. На сколько процентов стало лучше благодаря вам?'],['vika','Жалоб −30%. Но снегопады стали слабее в два раза. Контрольных районов у нас нет.']],
+  type:'classify',card:{who:'Мэр Морозов',t:'Жалоб стало на 30% меньше — значит, ранняя уборка дала −30%.',k:'idea'},
+  br:{idea:{ok:1,fx:{trust:2},res:'Верно: это не наблюдение и не гипотеза, а предположение без проверки. Факт — только «жалоб −30%». Вы честно сказали мэру, что без сравнения эффект неизвестен, и предложили пилот на следующий снегопад.',next:'route'},
+   obs:{ok:0,fx:{trust:-8},res:'Вы записали вывод как факт. Через неделю Ольга показала: в соседнем городе без ранней уборки жалоб тоже −30%. Отчёт мэра высмеяли.',flag:'overclaim',next:'route'},
+   hyp:{ok:0,fx:{trust:-4},res:'Это не гипотеза: нет изменения, которое можно проверить, — всё уже раскатано. Вы потратили день на расчёты без контрольной группы.',next:'route'}}},
+ shovels:{day:'День 2 · 14:00',title:'Депутат с идеей',intro:[['dep','Слушайте, у меня гипотеза! Если раздать жителям лопаты, жалоб станет меньше — во дворах, где люди сами чистят, жалоб и так в три раза меньше!']],
+  type:'classify',card:{who:'Депутат Сугробов',t:'Если раздать жителям лопаты, жалоб станет меньше, потому что в некоторых дворах люди уже чистят сами.',k:'idea'},
+  br:{idea:{ok:1,fx:{trust:2},res:'Верно, это идея в костюме гипотезы: нет цифр, срока, а «в некоторых дворах» — связь, а не причина. Активные дворы и так жалуются меньше.',next:'shovels2'},
+   hyp:{ok:0,fx:{budget:-12,complaints:150},res:'Вы приняли это за готовую гипотезу и закупили 20 000 лопат на 12 млн. Через неделю жалоб не меньше: лопаты лежат в подъездах.',flag:'shovels',next:'route'},
+   obs:{ok:0,fx:{trust:-8},res:'Вы записали в отчёт мэру как факт: «лопаты снижают жалобы». Ольга проверила — данных нет. Заголовок: «Мэрия лечит снегопад лопатами».',next:'route'}}},
+ shovels2:{day:'День 2 · 15:00',title:'Что делать с идеей депутата',intro:[['dep','Ну так что, раздаём? Я уже пообещал избирателям!']],
+  type:'choice',opts:[
+   {t:'Превратить идею в проверяемую гипотезу: пилот в 20 случайно выбранных дворах',ok:1,fx:{budget:-2,trust:3},res:'В случайных дворах эффекта не нашли: жалоб столько же. Зато потратили 2 млн, а не 12, и депутату есть что честно сказать избирателям.',next:'route'},
+   {t:'Раздать лопаты во все дворы города: идея хорошая, депутат уже пообещал',ok:0,fx:{budget:-12,complaints:100},res:'12 млн ушли на лопаты. Жалоб не меньше: чистят те, кто чистил и раньше.',flag:'shovels',next:'route'},
+   {t:'Пилот в 20 дворах, которые выберут активисты из совета жителей',ok:0,fx:{budget:-2,trust:-4},res:'Активисты выбрали свои, и так ухоженные дворы — «эффект» вышел огромным. Это ошибка отбора: результат говорит о дворах, а не о лопатах.',next:'route'}]},
+ route:{day:'День 3 · 09:00',title:'Консультант из столицы',intro:[['kons','Если перейти на умные маршруты для техники, город станет чище на 30%. Так сделали в Хельсинки. Стоимость проекта — 20 миллионов.'],['fed','А я вам и без Хельсинки скажу: за смену 140 км проезжаю, из них 38 — порожняком.']],
+  type:'classify',card:{who:'Консультант',t:'Если перейти на умные маршруты, город станет чище на 30%, потому что так сделали в Хельсинки.',k:'idea'},
+  br:{idea:{ok:1,fx:{trust:2},res:'Верно: «чище на 30%» никто не мерил, а Хельсинки — не наше наблюдение. Зато у Фёдора есть настоящие данные — 38 км порожняком.',next:'route2'},
+   hyp:{ok:0,fx:{budget:-20,trust:-6},res:'Вы приняли это за гипотезу и подписали контракт на 20 млн. Через месяц «30%» так и не смогли посчитать: метрики «чистота города» не существует.',flag:'consult',next:'ice'},
+   obs:{ok:0,fx:{trust:-10},res:'Вы записали «умные маршруты дают −30%» как факт в отчёт. Ольга позвонила в Хельсинки: там такого исследования нет.',flag:'overclaim',next:'ice'}}},
+ route2:{day:'День 3 · 11:00',title:'Данные Фёдора',intro:[['fed','Ну что, будем считать мои километры или опять в Хельсинки звонить?']],
+  type:'choice',opts:[
+   {t:'Гипотеза: перестроить маршруты по карте жалоб, порожний пробег с 38 до 20 км за 2 недели',ok:1,fx:{budget:3,complaints:-150},res:'Вика с Фёдором перерисовали маршруты по карте жалоб. Порожний пробег упал до 22 км, а освободившиеся часы техники ушли на дворы.',flag:'routes',next:'ice'},
+   {t:'Купить консультанта всё-таки: у него опыт, а у нас только километры Фёдора',ok:0,fx:{budget:-20},res:'Контракт на 20 млн. Консультант прислал презентацию с картинками Хельсинки.',flag:'consult',next:'ice'},
+   {t:'Отправить Фёдора на курсы экономичного вождения, чтобы меньше ездил зря',ok:0,fx:{budget:-1,trust:-2},res:'Фёдор вернулся с сертификатом. Порожний пробег тот же: проблема в маршруте, а не в водителе.',next:'ice'}]},
+ ice:{day:'День 5 · 06:40',title:'Ледяной дождь',intro:[['sn','Ночью прошёл ледяной дождь. Город превратился в каток.'],['vika','Срочно: 41% травм за зиму — в радиусе 200 метров от поликлиник и аптек. Эти тротуары у нас чистят в общей очереди, к 14:00.']],
+  type:'timed',sec:20,opts:[
+   {t:'Сейчас же перебросить бригады к поликлиникам и аптекам, до 8:00, и заложить пилот на сезон',ok:1,fx:{injuries:1,trust:5},res:'К 8 утра тротуары у поликлиник посыпаны. Наблюдение было достаточно сильным, чтобы действовать сразу, а эффект вы измерите за сезон.',next:'push'},
+   {t:'Повесить у поликлиник таблички «Осторожно, скользко» и предупредить жителей в приложении',ok:0,fx:{injuries:5,trust:-3},res:'Таблички висят, люди падают. За утро — 5 травм у поликлиник.',next:'push'},
+   {t:'Сначала проверить гипотезу на данных за неделю, чтобы не тратить бригады зря',ok:0,fx:{injuries:6,trust:-6},res:'Пока собирали данные, у поликлиник упали 6 человек. Не всё нужно сначала проверять: при высокой цене ошибки сильное наблюдение — повод действовать.',next:'push'}],
+  timeout:{fx:{injuries:7,trust:-8},res:'Вы не успели решить. К 9 утра у поликлиник — 7 травм.',next:'push'}},
+ push:{day:'День 6 · 18:00',title:'Пуш про эвакуацию',intro:[['oleg','Мы неделю шлём пуш «Через 2 часа уборка — переставьте машину». Эвакуаций −60%! Но жалоб на спам вчетверо больше, и 8% жителей отключили уведомления.']],
+  type:'choice',opts:[
+   {t:'Слать пуш только тем, чья улица в плане уборки, и следить за отключениями',ok:1,fx:{complaints:-150,trust:3},res:'Жалобы на спам упали, эвакуаций по-прежнему меньше. Защитная метрика спасла канал связи с жителями.',next:'final'},
+   {t:'Раскатать пуш как есть: эвакуаций −60%, остальное — мелочи',ok:0,fx:{complaints:300},res:'Ещё 15% отключили уведомления. В следующий снегопад пуш просто не дошёл, и эвакуаций снова 300.',next:'final'},
+   {t:'Отключить пуши совсем: люди раздражаются, а это бьёт по доверию к мэрии',ok:0,fx:{complaints:200},res:'Эвакуации вернулись. Вы выбросили работающее решение вместо того, чтобы его настроить.',next:'final'}]},
+ final:{day:'День 7 · 12:00',title:'Пресс-конференция',intro:[['olga','Олег, у меня вопрос к команде: что на самом деле сработало этой зимой?'],['mer','Скажите что-нибудь красивое. Камеры включены.']],
+  type:'choice',opts:[
+   {t:'Показать, что проверили и с каким эффектом, а что не сработало и почему',ok:1,fx:{trust:8},res:'Ольга написала: «Первая мэрия, которая показала и провалы». Рейтинг мэра вырос.',next:'END'},
+   {t:'Сказать, что всё благодаря нашей команде: жалоб стало в два раза меньше',ok:0,fx:{trust:-8},res:'Ольга сравнила с погодой и соседними городами. Заголовок: «В Сугробске растаял не снег, а цифры».',next:'END'},
+   {t:'Сказать, что всё решила погода: снегопады ослабли, команда ни при чём',ok:0,fx:{trust:-3},res:'Честно, но неправда: часть эффекта — ваши решения. Мэр недоумевает, за что платит команде.',next:'END'}]}
+};
+const ECHO={
+  push:[['shovels',{budget:-3},'Последствия прошлых решений: 20 000 лопат нужно где-то хранить — аренда склада обошлась в 3 млн.'],['late',{complaints:200},'Последствия прошлых решений: пока проводили опрос, ранняя уборка так и не началась — утренние жалобы продолжают копиться.']],
+  ice:[['consult',{budget:-4},'Последствия прошлых решений: консультант выставил счёт за «сопровождение» — ещё 4 млн из бюджета зимы.']],
+  final:[['overclaim',{trust:-8},'Последствия прошлых решений: Ольга начинает с вопроса про цифры, которые не подтвердились. Мэр краснеет.'],['consult',{trust:-5},'Последствия прошлых решений: журналисты спрашивают, за что консультанту заплатили 20 млн.'],['shovels',{trust:-4},'Последствия прошлых решений: в зале держат плакат «Где наши лопаты?».']]};
+async function echoes(id){const F=G.flags||{};for(const [f,fx,t] of ECHO[id]||[]){if(!F[f])continue;const prev=cityFx(fx);const b=add(el('div','fb bad',`<h3>Эхо прошлой ошибки</h3><p class="why">${t}</p>`));b.appendChild(dash(prev));into(b);await sleep(500);const o=cityCheck();if(o){G.overReason=o;await sleep(500);throw new Over();}}}
+async function snowStory(){G.round=1;G.city=Object.assign({},CITY0);G.path=[];hud();let id='start';let step=0;
+  while(id&&id!=='END'){const N=STORY[id];step++;G.round=Math.min(5,1+Math.floor(step/3));hud();clear();
+    add(el('div','rhead',`<span class="ctr">${N.day} · шаг ${step}</span><h2 class="mis">${N.title}</h2>`));add(dash(null));
+    if(step>1&&!(G.flags||{}).honestPilot&&!(G.flags||{}).routes){const pv=cityFx({complaints:120});const d=add(el('p','cap hint','Снег продолжает идти: без работающего решения жалобы растут сами — +120 за ночь.'));}
+    await echoes(id);
+    for(const [w,t] of N.intro||[])await sayP(w,t);
+    let pick;
+    if(N.type==='classify'){const tk=add(el('div','ticket fly',`<span class="who">${esc(N.card.who)}</span><div class="t">«${esc(N.card.t)}»</div>`));
+      add(el('p','cap hint',N.type==='classify'?'Что это: наблюдение, идея или гипотеза? От ответа зависит, что будет дальше.':''));
+      const bins=add(binsEl());if(AT)tk.dataset.k=N.card.k;into(bins);const k=await pickBin(bins);Sound.sfx('stamp');tk.appendChild(el('span','stamp '+k,KIND[k].n.toUpperCase()));
+      bins.querySelector(`[data-k="${N.card.k}"]`).classList.add('right');if(k!==N.card.k)bins.querySelector(`[data-k="${k}"]`).classList.add('wrong');pick=N.br[k];
+      if(!pick.ok)miss('«'+N.card.t+'»','Это '+KIND[N.card.k].n.toLowerCase()+'. '+pick.res);}
+    else{const box=add(el('div','opts'));let left=N.sec||0,iv=null,tm=null;
+      if(N.type==='timed'){tm=add(el('div','timer',`<span id="tsec">${left}</span><div class="tbar"><i id="tbi" style="width:100%"></i></div>`));}
+      const ord=N.opts.map((_,i)=>i).sort(()=>Math.random()-.5);const ap=ord.findIndex(i=>N.opts[i].ok);if(AT)box.dataset.a=ap;
+      pick=await new Promise(res=>{ord.forEach((i,pos)=>{const b=el('button','opt',`<span class="k">${'АБВГ'[pos]}</span><span>${N.opts[i].t}</span>`);b.onclick=()=>{box.dataset.p=pos;res(N.opts[i]);};box.appendChild(b);});into(box);
+        if(N.type==='timed')iv=setInterval(()=>{left--;const s=$('#tsec'),bi=$('#tbi');if(s)s.textContent=Math.max(0,left);if(bi)bi.style.width=Math.max(0,left/N.sec*100)+'%';if(left<=5&&left>0)Sound.sfx('tick');if(left<=0){clearInterval(iv);res(Object.assign({ok:0,to:1},N.timeout));}},reduce?150:1000);});
+      clearInterval(iv);[...box.children].forEach(b=>b.disabled=true);if(box.dataset.p!=null){const p=+box.dataset.p;box.children[p].classList.add(pick.ok?'ok':'bad');}if(!pick.ok)box.children[ap].classList.add('right');
+      if(!pick.ok)miss(N.title,pick.res);}
+    sc(!!pick.ok,15);if(!pick.ok)pick=Object.assign({},pick,{fx:Object.assign({},pick.fx,{trust:((pick.fx||{}).trust||0)-2})});if(pick.flag)(G.flags=G.flags||{})[pick.flag]=1;G.path.push(id+(pick.ok?'+':'-'));
+    const prev=cityFx(pick.fx);
+    const fb=add(el('div','fb '+(pick.ok?'ok':'bad'),`<h3>${pick.ok?'Сильное решение':pick.to?'Время вышло':'Последствия'}</h3><p class="why">${pick.res}</p>`));fb.appendChild(dash(prev));
+    const over=cityCheck();if(over){G.overReason=over;await sleep(600);throw new Over();}
+    const nx=pick.next||N.next;const n=el('button','btn',nx==='END'?'Чем закончилась зима':'Дальше');fb.appendChild(n);into(fb);await wait(n);id=nx;}
+  const C=G.city,good=C.trust>=75&&C.complaints<=1000&&C.injuries<=4;
+  G.ending=good?['Руководитель снежного штаба',`Зима закончилась: жалоб ${C.complaints} в сутки, травм ${C.injuries}, доверие мэра ${C.trust}%. Мэр назначил вас руководителем снежного штаба Сугробска.`]
+    :C.trust>=50?['Город справился, но с трудом',`Жалоб ${C.complaints} в сутки, травм ${C.injuries}, доверие мэра ${C.trust}%. Часть решений сработала, часть ушла в сугробы. Пройдите ещё раз — история пойдёт иначе.`]
+    :['Проект под вопросом',`Доверие мэра — ${C.trust}%, жалоб ${C.complaints} в сутки. Слишком много идей приняли за гипотезы и фактов — за идеи. Попробуйте другой путь.`];}
+
 async function theorySnow(){G.round=0;hud();clear();
   add(el('div','rhead',`<span class="ctr">Снежный город · средняя сложность</span><h2 class="mis">Сугробск после снегопада</h2>`));
   await catSay(`${esc(PLAYER.name)}, привет! Я Снежок. Вы — продакт городского приложения «Сугробск.Снег». Ночью выпало 34 см, и у всех сразу появились «гипотезы».`,'wow');
@@ -532,7 +670,8 @@ async function theorySnow(){G.round=0;hud();clear();
     ['hyp','Что изменится и как проверить?','Что меняем, какая метрика и на сколько сдвинется, за какой срок и почему мы так думаем.','«Если начинать уборку тротуаров в 4:00, утренних жалоб станет с 620 до 350 за 4 снегопада, потому что 62% жалоб — с 7 до 9»']]
    .map(([id,q,d,e])=>`<div class="kind" style="--c:${KIND[id].c}"><span class="ic">${ICON[id]}</span><span class="q">${q}</span><h3>${KIND[id].n}</h3><p>${d}</p><div class="ex">${e}</div></div>`).join('');add(k);
   add(el('div','block',`<span class="ctr">Формула</span><p class="formula" style="margin-top:6px"><span class="f1">Если [изменение],</span> <span class="f2">то [метрика] изменится с X до Y</span> <span class="f4">за [срок],</span> <span class="f3">потому что [наблюдение].</span></p><p class="cap" style="margin-top:10px">Ловушка этого уровня: «если… то… потому что» без цифр и срока — всё ещё идея. А «так сделали в другом городе» — не наше наблюдение.</p>`));
-  const b=add(el('button','btn big','Чистим! К первому раунду →'));into(b);await wait(b);}
+  add(el('div','block',`<span class="ctr">Как устроен этот уровень</span><p style="margin-top:6px">Это не тест, а история одной недели. Каждый ответ — решение: если примете факт за гипотезу или идею за проверенный результат, город это почувствует, и сюжет пойдёт по другой ветке. Следите за четырьмя показателями: жалобы, бюджет, доверие мэра и травмы. Обрушите любой — зима закончится раньше.</p>`));
+  const b=add(el('button','btn big','Начать неделю →'));into(b);await wait(b);}
 
 /* ---------- screens ---------- */
 function binsEl(){const b=el('div','bins');['obs','idea','hyp'].forEach((k,i)=>{const x=el('button','bin',`<kbd>${i+1}</kbd><span class="ic" style="--c:${KIND[k].c}">${ICON[k]}</span>${KIND[k].n}`);x.dataset.k=k;b.appendChild(x);});return b;}
@@ -547,7 +686,7 @@ async function intro(){G=null;hud();clear();
   const f=el('div','block shade');f.style.cssText='display:flex;flex-direction:column;gap:14px';
   f.innerHTML=`<div class="field"><label for="nm">Как вас зовут?</label><input id="nm" maxlength="16" autocomplete="given-name" placeholder="Введите имя"><div class="err" id="e1"></div></div>
    <div class="field"><label for="ct">Email или ник в Telegram</label><input id="ct" maxlength="80" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="anna@mail.ru или @anna_pm"><div class="err" id="e2"></div><div class="cap">Результат и шпаргалка — в конце игры. Нажимая «Начать», вы соглашаетесь, что Skill Route может написать вам по этому контакту.</div></div>
-   <div class="field"><label>Уровень</label><div class="lvls" id="lvls"><button class="lv" data-l="junior" aria-pressed="true"><b>Базовый</b><span>Чем гипотеза отличается от идеи и наблюдения. Для старта в профессии.</span></button><button class="lv" data-l="senior" aria-pressed="false"><b>Сложный · Senior</b><span>Корреляции, закон Гудхарта, мощность теста, защитные метрики и чтение результатов.</span></button><button class="lv" data-l="snow" aria-pressed="false"><b>Снежный город</b><span>Сугробск после снегопада: уборка, жалобы и пилоты. Средняя сложность, новые ловушки.</span></button></div></div><div class="row"><button class="btn big pink" id="go">Начать игру</button><span class="cap">3 уровня · 5 раундов · 10–15 минут · 3 рыбки-жизни на раунд</span></div>`;
+   <div class="field"><label>Уровень</label><div class="lvls" id="lvls"><button class="lv" data-l="junior" aria-pressed="true"><b>Базовый</b><span>Чем гипотеза отличается от идеи и наблюдения. Для старта в профессии.</span></button><button class="lv" data-l="senior" aria-pressed="false"><b>Сложный · Senior</b><span>Корреляции, закон Гудхарта, мощность теста, защитные метрики и чтение результатов.</span></button><button class="lv" data-l="snow" aria-pressed="false"><b>Снежный город</b><span>Ветвящаяся история одной недели: каждая ошибка меняет сюжет и город. Несколько концовок.</span></button></div></div><div class="row"><button class="btn big pink" id="go">Начать игру</button><span class="cap">3 уровня · 5 раундов · 10–15 минут · 3 рыбки-жизни на раунд</span></div>`;
   add(f);
   if(window.SRX)SRX.duelReady.then(d=>{if(!d||d.game!=='hypo'||!f.isConnected)return;app.insertBefore(SRX.banner(d.scenario==='C'?'snow':'hypo',d,{A:'Базовый уровень',B:'Сложный · Senior',C:'Снежный город'}[d.scenario]),f);const lv=document.querySelector(`.lv[data-l="${{A:'junior',B:'senior',C:'snow'}[d.scenario]||'junior'}"]`);if(lv)lv.click();});
   const nm=$('#nm'),ct=$('#ct');try{const sv=JSON.parse(localStorage.getItem('mayor-player')||'null');if(sv){nm.value=sv.name||'';ct.value=sv.raw||'';}}catch(e){}
@@ -639,7 +778,7 @@ async function bossRound(round,DECK=BOSS,SEC=60){G.round=round;G.hearts=3;hud();
   const n=add(el('button','btn big','Узнать результат'));into(n);await wait(n);}
 
 async function finale(){G.round=ROUNDS.length-1;hud();clear();const acc=G.total?Math.round(G.correct/G.total*100):0;
-  const R=G.lvl==='snow'?(acc>=88?['Главный по снегу','Вы отличаете гипотезу от идеи даже в метель. Мэр Сугробска назначил вас руководителем снежного штаба.']:acc>=72?['Снежный продакт','Уверенно разгребаете идеи и наблюдения. Пара ловушек ещё засыпала дорогу — разберите их в ответах.']:acc>=55?['Помощник дворника','Формулу знаете, но идеи в костюме гипотез пока проскакивают. Ещё один снегопад — и получится.']:['Сугроб','Пока снег победил. Перечитайте шпаргалку и попробуйте снова — Снежок верит в вас.']):G.lvl==='senior'?(acc>=88?['Head of Product','Вы видите ошибку отбора, Гудхарта и множественные сравнения раньше, чем их успевают показать на слайде. Сеньорский уровень подтверждён.']:acc>=72?['Senior PM','Сильный уровень: механизм, защитные метрики и правила решения для вас норма. Пара ловушек ещё проскочила — разберите их в ответах.']:acc>=55?['Middle+ PM','Формулы знаете, но сеньорские ловушки — корреляции, мощность теста, срезы — пока срабатывают. Пройдите ещё раз.']:['Junior в сложном уровне','Сеньорские ловушки пока сильнее. Попробуйте базовый уровень, а потом вернитесь сюда.']):acc>=90?['Главный по гипотезам','Вы отличаете гипотезу от идеи с первого взгляда. Тамара назначила вас Chief Hypothesis Officer, а Пирожок уступил вам подоконник.']
+  const R=G.lvl==='snow'&&G.ending?G.ending:G.lvl==='snow'?(acc>=88?['Главный по снегу','Вы отличаете гипотезу от идеи даже в метель. Мэр Сугробска назначил вас руководителем снежного штаба.']:acc>=72?['Снежный продакт','Уверенно разгребаете идеи и наблюдения. Пара ловушек ещё засыпала дорогу — разберите их в ответах.']:acc>=55?['Помощник дворника','Формулу знаете, но идеи в костюме гипотез пока проскакивают. Ещё один снегопад — и получится.']:['Сугроб','Пока снег победил. Перечитайте шпаргалку и попробуйте снова — Снежок верит в вас.']):G.lvl==='senior'?(acc>=88?['Head of Product','Вы видите ошибку отбора, Гудхарта и множественные сравнения раньше, чем их успевают показать на слайде. Сеньорский уровень подтверждён.']:acc>=72?['Senior PM','Сильный уровень: механизм, защитные метрики и правила решения для вас норма. Пара ловушек ещё проскочила — разберите их в ответах.']:acc>=55?['Middle+ PM','Формулы знаете, но сеньорские ловушки — корреляции, мощность теста, срезы — пока срабатывают. Пройдите ещё раз.']:['Junior в сложном уровне','Сеньорские ловушки пока сильнее. Попробуйте базовый уровень, а потом вернитесь сюда.']):acc>=90?['Главный по гипотезам','Вы отличаете гипотезу от идеи с первого взгляда. Тамара назначила вас Chief Hypothesis Officer, а Пирожок уступил вам подоконник.']
     :acc>=75?['Гипотезолог','Уверенно различаете три зверя продакта. Иногда идея в костюме гипотезы ещё проскакивает — но вы её уже чувствуете.']
     :acc>=55?['Генератор идей','Идеи у вас есть, но не всегда понятно, как их проверить. Ещё один заход — и вы начнёте видеть разницу сразу.']
     :['Наблюдатель с подоконника','Пока вы скорее смотрите, как Пирожок, чем проверяете. Перечитайте шпаргалку и сыграйте ещё раз — это быстро.'];
@@ -656,20 +795,15 @@ async function finale(){G.round=ROUNDS.length-1;hud();clear();const acc=G.total?
   const r=add(el('div','row'));const a=el('button','btn big pink','Сыграть ещё раз');a.onclick=()=>{G={lvl:G.lvl,score:0,combo:0,best:0,hearts:3,round:0,correct:0,total:0};SESSION=crypto.randomUUID?crypto.randomUUID():String(Date.now());track('start');run(1);};
   const o=el('a','btn big ghost','Другие игры');o.href='../';const lv=el('button','btn big ghost','Другой уровень');lv.onclick=()=>{document.body.classList.remove('snow');intro();};r.append(a,lv,o);}
 
-async function gameOver(round){Sound.sfx('bad');clear();track('gameover',{outcome:'Закончились жизни: '+ROUNDS[round]});
-  add(el('section','gover',`<span class="kicker" style="background:var(--red);color:#fff">Рыбки закончились</span><h1 class="mis">Гейм-овер</h1><p class="lede">Три ошибки в одном раунде — и Пирожок ушёл спать. Ничего страшного: перечитайте подсказки в разборах и попробуйте раунд ещё раз.</p>`));
-  await catSay('Мяу. Помните: «станет лучше» — это не метрика, а «я уверен» — не причина.','sad');
-  return new Promise(res=>{const r=add(el('div','row'));const a=el('button','btn big pink','Переиграть раунд');a.onclick=()=>res('retry');const b=el('button','btn big ghost','С начала');b.onclick=()=>res('menu');r.append(a,b);});}
+async function gameOver(round){Sound.sfx('bad');clear();const OR=G.overReason;G.overReason=null;track('gameover',{outcome:OR?OR[0]:'Закончились жизни: '+ROUNDS[round]});
+  add(el('section','gover',OR?`<span class="kicker" style="background:var(--red);color:#fff">Зима закончилась досрочно</span><h1 class="mis">Гейм-овер</h1><h2 style="margin-top:10px">${OR[0]}</h2><p class="lede" style="margin-top:8px">${OR[1]}</p>`:`<span class="kicker" style="background:var(--red);color:#fff">Рыбки закончились</span><h1 class="mis">Гейм-овер</h1><p class="lede">Три ошибки в одном раунде — и Пирожок ушёл спать. Ничего страшного: перечитайте подсказки в разборах и попробуйте раунд ещё раз.</p>`));
+  await catSay(G.lvl==='snow'?'Каждая ошибка в том, факт это, идея или гипотеза, тянет за собой следующую. Попробуйте другую ветку.':'Мяу. Помните: «станет лучше» — это не метрика, а «я уверен» — не причина.','sad');
+  return new Promise(res=>{const r=add(el('div','row'));const a=el('button','btn big pink',G.lvl==='snow'?'Начать неделю заново':'Переиграть раунд');a.onclick=()=>res('retry');const b=el('button','btn big ghost','С начала');b.onclick=()=>res('menu');r.append(a,b);});}
 
 async function run(skipTheory){
   const sen=G.lvl==='senior';ROUNDS=sen?['Теория','Раунд 1','Раунд 2','Раунд 3','Раунд 4','Раунд 5','Финал']:['Теория','Раунд 1','Раунд 2','Раунд 3','Раунд 4','Раунд 5','Финал'];
   const snw=G.lvl==='snow';document.body.classList.toggle('snow',snw);
-  const steps=snw?[...(skipTheory?[]:[()=>theorySnow()]),
-    ()=>sortRound(W1,'Снег, идеи и гипотезы','Все в мэрии говорят «у меня гипотеза». Бросьте каждую фразу в правильную корзину. Осторожно: есть ловушки.',1),
-    ()=>fixRound(2,WFIX,{title:'Почини гипотезу',sub:'Депутат Сугробов и коллеги принесли пять «гипотез». Найдите, чего не хватает каждой.',cat:'Пять гипотез — пять сугробов. Разгребаем.',who:'Гипотеза',next:'Дальше'}),
-    ()=>buildRound(3,WBUILD),
-    ()=>fixRound(4,WDEC,{title:'Что показал пилот',sub:'Пилоты закончились. Прочитайте результаты правильно.',cat:'Цифры есть. Осталось понять, что они значат.',who:'Результат',next:'К финальному раунду'}),
-    ()=>bossRound(5,WBOSS,70)]
+  const steps=snw?[...(skipTheory?[]:[()=>theorySnow()]),()=>snowStory()]
    :sen?[...(skipTheory?[]:[()=>theorySenior()]),
     ()=>sortRound(S1,'Тонкие различия','Корреляции, цели, интерпретации и гипотезы о проблеме. Если не хватает срока, цифры или механизма из наших данных — это идея.',1),
     ()=>fixRound(2,SREV,{title:'Ревью гипотез',sub:'Олег принёс гипотезы на продуктовое ревью. Найдите главный изъян каждой — как сеньор.',cat:'Тут все цифры на месте. Но цифры — не главное.',who:'Гипотеза на ревью',next:'Дальше'}),
