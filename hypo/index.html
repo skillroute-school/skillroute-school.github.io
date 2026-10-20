@@ -227,9 +227,11 @@ body.snow .intro-form{color:var(--ink)}
   <div class="prog" id="prog"></div>
 </header>
 <main id="app" aria-live="polite"></main>
+<script src="../sr-extras.js"></script>
 <script>
 (()=>{
 'use strict';
+const LVLN={junior:'Базовый уровень',senior:'Сложный · Senior',snow:'Снежный город'},LVLC={junior:'A',senior:'B',snow:'C'};const miss=(t,w)=>{if(G)(G.miss=G.miss||[]).push({t:String(t).slice(0,200),w:String(w).slice(0,420)});};
 const $=s=>document.querySelector(s),app=$('#app');
 const AT=location.search.includes('autotest');const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const sleep=ms=>new Promise(r=>setTimeout(r,reduce?0:ms));
@@ -547,6 +549,7 @@ async function intro(){G=null;hud();clear();
    <div class="field"><label for="ct">Email или ник в Telegram</label><input id="ct" maxlength="80" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" placeholder="anna@mail.ru или @anna_pm"><div class="err" id="e2"></div><div class="cap">Пришлём результат и шпаргалку. Нажимая «Начать», вы соглашаетесь, что Skill Route может написать вам по этому контакту.</div></div>
    <div class="field"><label>Уровень</label><div class="lvls" id="lvls"><button class="lv" data-l="junior" aria-pressed="true"><b>Базовый</b><span>Чем гипотеза отличается от идеи и наблюдения. Для старта в профессии.</span></button><button class="lv" data-l="senior" aria-pressed="false"><b>Сложный · Senior</b><span>Корреляции, закон Гудхарта, мощность теста, защитные метрики и чтение результатов.</span></button><button class="lv" data-l="snow" aria-pressed="false"><b>Снежный город</b><span>Сугробск после снегопада: уборка, жалобы и пилоты. Средняя сложность, новые ловушки.</span></button></div></div><div class="row"><button class="btn big pink" id="go">Начать игру</button><span class="cap">3 уровня · 5 раундов · 10–15 минут · 3 рыбки-жизни на раунд</span></div>`;
   add(f);
+  if(window.SRX)SRX.duelReady.then(d=>{if(!d||d.game!=='hypo'||!f.isConnected)return;app.insertBefore(SRX.banner(d.scenario==='C'?'snow':'hypo',d,{A:'Базовый уровень',B:'Сложный · Senior',C:'Снежный город'}[d.scenario]),f);const lv=document.querySelector(`.lv[data-l="${{A:'junior',B:'senior',C:'snow'}[d.scenario]||'junior'}"]`);if(lv)lv.click();});
   const nm=$('#nm'),ct=$('#ct');try{const sv=JSON.parse(localStorage.getItem('mayor-player')||'null');if(sv){nm.value=sv.name||'';ct.value=sv.raw||'';}}catch(e){}
   nm.oninput=()=>$('#e1').textContent='';ct.oninput=()=>$('#e2').textContent='';
   nm.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();ct.focus();}};ct.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('#go').click();}};
@@ -576,7 +579,7 @@ async function sortRound(cards,title,sub,round){G.round=round;G.hearts=3;hud();c
     const bins=add(binsEl());into(bins);if(AT)tk.dataset.k=c.k;
     const k=await pickBin(bins);const ok=k===c.k;Sound.sfx('stamp');tk.appendChild(el('span','stamp '+k,KIND[k].n.toUpperCase()));
     bins.querySelector(`[data-k="${c.k}"]`).classList.add('right');if(!ok)bins.querySelector(`[data-k="${k}"]`).classList.add('wrong');
-    hit(ok);const fb=add(el('div','fb '+(ok?'ok':'bad'),`<h3>${ok?'Верно! Это '+KIND[c.k].n.toLowerCase():'Нет, это '+KIND[c.k].n.toLowerCase()}</h3><p class="why">${c.why}</p>`));
+    hit(ok);if(!ok)miss('«'+c.t+'»','Это '+KIND[c.k].n.toLowerCase()+'. '+c.why);const fb=add(el('div','fb '+(ok?'ok':'bad'),`<h3>${ok?'Верно! Это '+KIND[c.k].n.toLowerCase():'Нет, это '+KIND[c.k].n.toLowerCase()}</h3><p class="why">${c.why}</p>`));
     if(G.hearts<=0){await sleep(400);throw new Over();}
     const n=el('button','btn',i<cards.length-1?'Следующая карточка':'Итоги раунда');fb.appendChild(n);into(fb);await wait(n);
     tk.remove();bins.remove();fb.remove();scrollTo({top:0});}
@@ -596,7 +599,7 @@ async function buildRound(round,SET=BUILD){const BUILD=SET;G.round=round;G.heart
       r.appendChild(cs);box.appendChild(r);s.cs=cs;});
     box.appendChild(chk);render();into(ob);await wait(chk);
     let right=0;B.slots.forEach((s,si)=>{[...s.cs.children].forEach(c=>{c.disabled=true;c.setAttribute('aria-pressed','false');const i=+c.dataset.i;if(s.o[i][1])c.classList.add('good');else if(i===ch[si])c.classList.add('badp');});if(s.o[ch[si]][1])right++;});
-    const NS=B.slots.length;const ok=right>=NS-1;G.total++;if(ok){G.correct++;G.combo++;G.best=Math.max(G.best,G.combo);G.score+=right*4;Sound.sfx('ok');}else{G.combo=0;G.hearts--;G.score+=right*2;Sound.sfx('bad');}hud();
+    const NS=B.slots.length;const ok=right>=NS-1;if(right<NS)miss('Сборка гипотезы: «'+B.obs.slice(0,90)+'…»','Верных деталей: '+right+' из '+NS+'. Сильная гипотеза меняет конкретное, двигает измеримую метрику на понятное число за реальный срок и опирается на наблюдение.');G.total++;if(ok){G.correct++;G.combo++;G.best=Math.max(G.best,G.combo);G.score+=right*4;Sound.sfx('ok');}else{G.combo=0;G.hearts--;G.score+=right*2;Sound.sfx('bad');}hud();
     const fb=add(el('div','fb '+(ok?'ok':'bad'),`<h3>${right===NS?'Идеальная гипотеза!':ok?'Почти идеально: '+right+' из '+NS:'Пока слабовато: '+right+' из '+NS}</h3><p class="why">Сильная гипотеза меняет что-то конкретное, двигает измеримую метрику на понятное число за реальный срок и опирается на наблюдение. «Станет лучше», «когда-нибудь» и «так все делают» превращают её обратно в идею.</p>`));
     if(G.hearts<=0){await sleep(400);throw new Over();}
     const n=el('button','btn',bi<BUILD.length-1?'Следующее наблюдение':'Дальше');fb.appendChild(n);into(fb);await wait(n);clear();
@@ -610,7 +613,7 @@ async function fixRound(round,FIX=FIXJ,O={}){G.round=round;G.hearts=3;hud();clea
     const tk=add(el('div','ticket fly',`<span class="who">${O.who||'Гипотеза'} ${i+1} из ${FIX.length}${O.who?'':' · от Гоши'}</span><div class="weak">«${esc(F.t)}»</div>`));
     const box=add(el('div','opts'));const ord=F.o.map((_,j)=>j).sort(()=>Math.random()-.5);const p=new Promise(res=>ord.forEach((j,pos)=>{const b=el('button','opt',`<span class="k">${'АБВГ'[pos]}</span><span>${F.o[j]}</span>`);b.onclick=()=>res(pos);box.appendChild(b);}));into(box);const ap=ord.indexOf(F.a);if(AT)box.dataset.a=ap;
     const j=await p;[...box.children].forEach(b=>b.disabled=true);const ok=j===ap;box.children[j].classList.add(ok?'ok':'bad');if(!ok)box.children[ap].classList.add('right');
-    hit(ok,12);const fb=add(el('div','fb '+(ok?'ok':'bad'),`<h3>${ok?'Точно!':'Не совсем'}</h3><p class="why">${F.why}</p>`));
+    hit(ok,12);if(!ok)miss('«'+F.t+'»',F.why);const fb=add(el('div','fb '+(ok?'ok':'bad'),`<h3>${ok?'Точно!':'Не совсем'}</h3><p class="why">${F.why}</p>`));
     if(G.hearts<=0){await sleep(400);throw new Over();}
     const n=el('button','btn',i<FIX.length-1?'Следующая':(O.next||'К финальному раунду'));fb.appendChild(n);into(fb);await wait(n);tk.remove();box.remove();fb.remove();scrollTo({top:0});}
 }
@@ -640,7 +643,7 @@ async function finale(){G.round=ROUNDS.length-1;hud();clear();const acc=G.total?
     :acc>=75?['Гипотезолог','Уверенно различаете три зверя продакта. Иногда идея в костюме гипотезы ещё проскакивает — но вы её уже чувствуете.']
     :acc>=55?['Генератор идей','Идеи у вас есть, но не всегда понятно, как их проверить. Ещё один заход — и вы начнёте видеть разницу сразу.']
     :['Наблюдатель с подоконника','Пока вы скорее смотрите, как Пирожок, чем проверяете. Перечитайте шпаргалку и сыграйте ещё раз — это быстро.'];
-  track('finish',{votes:acc,outcome:({senior:'Сложный: ',snow:'Снег: '}[G.lvl]||'Базовый: ')+R[0]});if(acc>=55){confetti(60);Sound.sfx('win');}
+  track('finish',{votes:acc,outcome:({senior:'Сложный: ',snow:'Снег: '}[G.lvl]||'Базовый: ')+R[0],report:{title:'Гипотеза или нет?',scenario:LVLN[G.lvl],rank:R[0],text:R[1],score:G.score,acc,lessons:[{tag:'Наблюдение',text:'Факт: что мы увидели. Цифры и поведение. Ничего не предлагает.'},{tag:'Идея',text:'Что можно сделать. Без связи с фактами, метрики и способа проверки.'},{tag:'Гипотеза',text:'Если [изменение], то [метрика] изменится с X до Y за [срок], потому что [наблюдение].'}].concat(G.lvl==='senior'?[{tag:'Сеньор',text:'Добавьте сегмент, защитную метрику, расчёт мощности теста и правило решения заранее.'}]:[]),miss:(G.miss||[]).slice(0,8),url:location.origin+location.pathname}});if(acc>=55){confetti(60);Sound.sfx('win');}
   try{const pv=parseInt(localStorage.getItem('hypo-best')||'0',10);if(G.score>pv)localStorage.setItem('hypo-best',String(G.score));}catch(e){}
   add(el('div','rank',`<span class="kicker" style="background:var(--pink);color:var(--ink)">Ваше звание</span><h2>${R[0]}</h2><p>${R[1]}</p>`));
   add(el('div','stats',`<div class="stat"><small>Очки</small><b>${G.score}</b></div><div class="stat"><small>Точность</small><b>${acc}%</b></div><div class="stat"><small>Лучшая серия</small><b>×${G.best}</b></div>`));
@@ -648,6 +651,7 @@ async function finale(){G.round=ROUNDS.length-1;hud();clear();const acc=G.total?
   const ch=add(el('div','block shade cheat'));ch.innerHTML=`<span class="ctr">Шпаргалка — сохраните скриншот</span>
     <div class="kinds">${['obs','idea','hyp'].map(k=>`<div class="kind" style="--c:${KIND[k].c}"><span class="ic">${ICON[k]}</span><h3>${KIND[k].n}</h3><p>${{obs:'Факт: что мы увидели. Цифры и поведение. Ничего не предлагает.',idea:'Что можно сделать. Без связи с фактами, метрики и способа проверки.',hyp:'Если [изменение], то [метрика] с X до Y за [срок], потому что [наблюдение].'}[k]}</p></div>`).join('')}</div>
     <p class="cap">Проверка на гипотезу: можно ли через срок честно сказать «подтвердилась» или «не подтвердилась»? Если нельзя — это идея.</p>`;
+  if(window.SRX)add(SRX.block({game:'hypo',theme:G.lvl==='snow'?'snow':'hypo',gameTitle:'Гипотеза или нет?',name:PLAYER.name,rank:R[0],score:G.score,acc,session:SESSION,scenario:LVLC[G.lvl],scenarioTitle:LVLN[G.lvl]}));
   add(el('div','cta',`<span class="kicker">Skill Route · школа продактов</span><h3>Проверяйте гипотезы в реальном продукте, а не только в котокафе</h3><p>Гипотезы, метрики, интервью, A/B-тесты и приоритизация — база профессии продакт-менеджера. В Skill Route её разбирают на живых кейсах с практиками.</p><div class="row"><a class="btn" href="https://t.me/skillroute1_bot" target="_blank" rel="noopener">Записаться на курс</a><a class="btn ghost" href="https://t.me/product_vibe_it" target="_blank" rel="noopener">Telegram-канал</a><a class="btn ghost" href="https://instagram.com/skill.route" target="_blank" rel="noopener">Instagram</a></div><p style="font-size:14px;font-weight:600">Напишите боту @skillroute1_bot «Привет» — расскажем про программу и подберём поток.</p>`));
   const r=add(el('div','row'));const a=el('button','btn big pink','Сыграть ещё раз');a.onclick=()=>{G={lvl:G.lvl,score:0,combo:0,best:0,hearts:3,round:0,correct:0,total:0};SESSION=crypto.randomUUID?crypto.randomUUID():String(Date.now());track('start');run(1);};
   const o=el('a','btn big ghost','Другие игры');o.href='../';const lv=el('button','btn big ghost','Другой уровень');lv.onclick=()=>{document.body.classList.remove('snow');intro();};r.append(a,lv,o);}
@@ -687,7 +691,7 @@ function parseContact(v){v=(v||'').trim();if(!v)return null;
 const SB_URL='https://hhqrdyriaochkisegseh.supabase.co/rest/v1/mayor_game_events';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocXJkeXJpYW9jaGtpc2Vnc2VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3ODI1ODMsImV4cCI6MjA5MDM1ODU4M30.SrTyAkWRMWdjecs2JcjooUxfBuWLgc2QyA5bMWtT8Iw';
 function track(event,extra){if(!PLAYER||!G)return;
-  const body=Object.assign({game:'hypo',session_id:SESSION,event,player_name:PLAYER.name.slice(0,40),contact:PLAYER.c.slice(0,120),contact_type:PLAYER.t,scenario:({senior:'B',snow:'C'}[G.lvl])||'A',chapter:clamp(G.round,0,30),xp:clamp(G.score,0,5000),accuracy:G.total?clamp(Math.round(G.correct/G.total*100),0,100):0},extra||{});
+  const body=Object.assign({game:'hypo',session_id:SESSION,duel_of:window.SRX?SRX.duelId:null,event,player_name:PLAYER.name.slice(0,40),contact:PLAYER.c.slice(0,120),contact_type:PLAYER.t,scenario:({senior:'B',snow:'C'}[G.lvl])||'A',chapter:clamp(G.round,0,30),xp:clamp(G.score,0,5000),accuracy:G.total?clamp(Math.round(G.correct/G.total*100),0,100):0},extra||{});
   try{fetch(SB_URL,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(body),keepalive:true}).catch(()=>{});}catch(e){}}
 new MutationObserver(()=>{document.body.classList.contains('snow')?SnowScene.start():SnowScene.stop();}).observe(document.body,{attributes:true,attributeFilter:['class']});
 intro();

@@ -383,9 +383,11 @@ table.dt{width:100%;border-collapse:collapse;font-size:14.5px;font-variant-numer
 </section>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
+<script src="../sr-extras.js"></script>
 <script>
 (()=>{
 'use strict';
+const GAME='mayor',THEME='mayor',GT='Мэр на данных';
 const $=s=>document.querySelector(s);
 const stage=$('#stage');
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -626,7 +628,7 @@ function choiceList(opts){return new Promise(res=>{const box=el('div','choices')
     b.onclick=()=>{[...box.children].forEach(c=>c.disabled=true);const k=o.ok===true?'ok':o.ok==='mid'?'mid':'bad';b.classList.add('picked',k);
       if(k!=='ok'){const r=opts.findIndex(x=>x.ok===true);if(r>-1)box.children[r].classList.add('right');}res(o);};box.appendChild(b);});add(box);});}
 const VERD={ok:['Решение по данным','В точку','Сильный ход'],mid:['Наполовину','Есть нюанс'],bad:['Мимо','Ошибка','Плохая идея']};
-function feedback({kind,title,why,lesson,xp,tag}){if(lesson)S.lessons.push({tag:tag||SCEN[S.scen].tagOf(S.ci),text:lesson});
+function feedback({kind,title,why,lesson,xp,tag}){if(kind!=='ok'&&(title||why))(S.miss=S.miss||[]).push({t:String(title||'').slice(0,140),w:String(why||'').slice(0,420)});if(lesson)S.lessons.push({tag:tag||SCEN[S.scen].tagOf(S.ci),text:lesson});
   return new Promise(res=>{const v=VERD[kind][Math.floor(Math.random()*VERD[kind].length)];
     const f=el('div','fb '+kind,`<div class="fbTop"><span class="verdict">${v}</span>${xp?`<span class="xp">+${xp} XP${S.streak>=3&&kind==='ok'?` · серия ×${S.streak}`:''}</span>`:''}</div>${title?`<h3>${title}</h3>`:''}${why?`<p>${why}</p>`:''}${lesson?`<div class="lesson"><span>Урок продакта</span><p>${lesson}</p></div>`:''}`);
     const btn=el('button','btn','Дальше');btn.onclick=()=>{btn.disabled=true;Sound.sfx('tap');res();};f.appendChild(btn);add(f);});}
@@ -1373,12 +1375,13 @@ async function finale(){const c=SCEN[S.scen];const v=S.final,win=v>=50;clearStag
     :v>=50?['Второй срок — впритык',`${Math.round(v)}% — победа, но с минимальным запасом. Город стал лучше, однако несколько решений стоили вам доверия.`]
     :v>=42?['Проигрыш во втором туре',`${Math.round(v)}% — не хватило совсем немного. Громов победил с лозунгом «Без таблиц». Но вы знаете, где ошиблись.`]
     :['Город выбрал Громова',`${Math.round(v)}% — ${c.city} выбрал Громова. Первым указом он заказал второе колесо обозрения. Пройдите ещё раз и дайте слово данным.`];
-  track('finish',{votes:clamp(Math.round(v),0,100),outcome:E[0]});
+  const ACC=S.total?Math.round(S.correct/S.total*100):0;track('finish',{votes:clamp(Math.round(v),0,100),outcome:E[0],report:{title:GT,scenario:c.title,rank:E[0],text:E[1],score:S.xp,acc:ACC,lessons:S.lessons.slice(0,10),miss:(S.miss||[]).slice(0,8),url:location.origin+location.pathname}});
   if(win){achieve('reelected');city.fireworks(12);city.good(true);Sound.sfx('lvl');}else{city.bad();Sound.sfx('over');}
   try{const k='mayor-best-'+S.scen,pv=parseInt(localStorage.getItem(k)||'-1',10);if(Math.round(v)>pv)localStorage.setItem(k,String(Math.round(v)));}catch(e){}
   const f=el('div','final');
   f.innerHTML=`<div class="ending ${win?'':'lose'}"><div class="row2"><div class="ava">${faceSvg(win?MAYORS[S.av]:P.gromov.f,'happy')}</div><div><span class="tag ${win?'':'r'}">Концовка · ${c.city}</span><h2 style="margin-top:6px">${E[0]}</h2></div></div><p>${E[1]}</p></div>
     ${statsHtml()}<h3>Достижения: ${S.ach.length}</h3><div class="badges">${S.ach.map(id=>`<div class="badge">${badgeSvg(id)}<div><b>${ACH[id][0]}</b><small>${ACH[id][1]}</small></div></div>`).join('')||'<p class="cap">Пока ни одного — в следующий раз получится.</p>'}</div>${lessonsHtml()}${cta()}`;
+  if(window.SRX){const x=SRX.block({game:GAME,theme:THEME,gameTitle:GT,name:S.name,rank:E[0],score:S.xp,acc:ACC,session:SESSION,scenario:S.scen,scenarioTitle:c.title});const ct=f.querySelector('.cta');ct?f.insertBefore(x,ct):f.appendChild(x);}
   const r=el('div','row');const again=el('button','btn big','Сыграть другой город');again.onclick=()=>boot();const same=el('button','btn ghost big','Этот город заново');same.onclick=()=>startScenario(S.scen,S.name,S.av);r.append(again,same);f.appendChild(r);add(f);stage.scrollTop=0;}
 async function gameOverScreen(r){city.bad();city.flash();Sound.sfx('over');clearStage();$('#pSub').textContent='Гейм-овер';
   const g=el('div','gover');g.innerHTML=`<span class="tag r">Срок окончен досрочно</span><div class="big">Гейм-овер</div><h2>${r.title}</h2><p style="color:#d5dce6">${r.why}</p>${r.lesson?`<div class="lesson"><span>Урок продакта</span><p>${r.lesson}</p></div>`:''}${statsHtml()}`;add(g);
@@ -1401,6 +1404,7 @@ async function boot(){S=null;renderHud();renderDots();city.setup({seed:11,land:'
     <div class="field"><label>Выберите город</label><div class="scens" id="scs"></div></div>
     <div class="rules"><b>Гейм-овер</b>, если доверие команды упадёт до 10, счастье жителей — до 15%, бюджет уйдёт в минус, население сократится на 10% — или если вы примете решение, после которого мэром не остаются.</div>`;
   stage.appendChild(box);
+  if(window.SRX)SRX.duelReady.then(d=>{if(!d||d.game!==GAME||!box.isConnected)return;box.insertBefore(SRX.banner(THEME,d,SCEN[d.scenario]?SCEN[d.scenario].title:''),box.children[1]||null);const sb=box.querySelectorAll('.scen')[['A','B','C'].indexOf(d.scenario)];if(sb)sb.click();});
   const avs=box.querySelector('#avs');MAYORS.forEach((m,i)=>{const b=el('button','avbtn',faceSvg(m,'happy'));b.setAttribute('aria-pressed',i===0?'true':'false');b.setAttribute('aria-label','Портрет '+(i+1));b.onclick=()=>{av=i;Sound.sfx('tap');[...avs.children].forEach((c,k)=>c.setAttribute('aria-pressed',k===i?'true':'false'));};avs.appendChild(b);});
   const scs=box.querySelector('#scs');
   ['A','B','C'].forEach(id=>{const c=SCEN[id];let best=null;try{best=localStorage.getItem('mayor-best-'+id);}catch(e){}
@@ -1429,7 +1433,7 @@ const SB_URL='https://hhqrdyriaochkisegseh.supabase.co/rest/v1/mayor_game_events
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhocXJkeXJpYW9jaGtpc2Vnc2VoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3ODI1ODMsImV4cCI6MjA5MDM1ODU4M30.SrTyAkWRMWdjecs2JcjooUxfBuWLgc2QyA5bMWtT8Iw';
 let PLAYER=null,SESSION='';
 function track(event,extra){if(!PLAYER)return;
-  const body=Object.assign({session_id:SESSION,event,player_name:PLAYER.name.slice(0,40),contact:PLAYER.c.slice(0,120),contact_type:PLAYER.t,scenario:S?S.scen:null,chapter:S?clamp(S.ci,0,30):0,xp:S?clamp(S.xp,0,5000):0,accuracy:S&&S.total?clamp(Math.round(S.correct/S.total*100),0,100):0},extra||{});
+  const body=Object.assign({session_id:SESSION,duel_of:window.SRX?SRX.duelId:null,event,player_name:PLAYER.name.slice(0,40),contact:PLAYER.c.slice(0,120),contact_type:PLAYER.t,scenario:S?S.scen:null,chapter:S?clamp(S.ci,0,30):0,xp:S?clamp(S.xp,0,5000):0,accuracy:S&&S.total?clamp(Math.round(S.correct/S.total*100),0,100):0},extra||{});
   try{fetch(SB_URL,{method:'POST',headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify(body),keepalive:true}).catch(()=>{});}catch(e){}}
 let runId=0;
 async function startScenario(sc,name,av){const my=++runId;S=fresh(sc);S.name=name;S.av=av;city.setup(SCEN[sc].city3);$('#pTitle').textContent=`${SCEN[sc].city} · ${SCEN[sc].title}`;renderHud();renderDots();
